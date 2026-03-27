@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Login – Infinity Coders Portal</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/animations.css">
+  <link rel="icon" href="assets/logo.png" type="image/png">
+
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at 30% 40%, rgba(108,43,217,0.2) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 70%, rgba(0,194,255,0.12) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .grid-bg {
+      position: fixed; inset: 0; pointer-events: none;
+      background-image: linear-gradient(rgba(108,43,217,0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(108,43,217,0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .login-logo { text-align: center; margin-bottom: 32px; }
+    .login-logo img { height: 56px; margin-bottom: 12px; }
+    .login-logo h1 { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 800; }
+    .login-logo p { color: var(--text-muted); font-size: 13px; }
+    .role-tabs { display: flex; background: var(--bg-dark); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+    .role-tab {
+      flex: 1; padding: 10px; text-align: center; border-radius: 8px;
+      cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-muted);
+      transition: all 0.2s; border: none; background: none;
+    }
+    .role-tab.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(108,43,217,0.4); }
+    .input-wrap { position: relative; }
+    .input-wrap .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 16px; }
+    .input-wrap .form-control { padding-left: 40px; }
+    .toggle-pass { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
+    .login-btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white; border: none; border-radius: var(--radius);
+      font-size: 16px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .login-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(108,43,217,0.5); }
+    .login-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .error-msg { color: #F87171; font-size: 13px; padding: 10px 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; margin-bottom: 16px; display: none; }
+    .demo-hint { margin-top: 20px; padding: 14px; background: rgba(108,43,217,0.08); border: 1px solid rgba(108,43,217,0.15); border-radius: 10px; }
+    .demo-hint p { font-size: 12px; color: var(--text-muted); margin: 0; }
+    .demo-hint strong { color: var(--primary-light); }
+    .back-link { text-align: center; margin-top: 20px; }
+    .back-link a { color: var(--text-muted); font-size: 13px; transition: color 0.2s; }
+    .back-link a:hover { color: var(--text-primary); }
+
+    /* Unverified email banner */
+    .unverified-banner {
+      display: none;
+      padding: 14px 16px;
+      background: rgba(251,191,36,0.08);
+      border: 1px solid rgba(251,191,36,0.25);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+    .unverified-banner .ub-title {
+      font-size: 13px; font-weight: 700; color: #FCD34D; margin-bottom: 4px;
+    }
+    .unverified-banner .ub-msg {
+      font-size: 12px; color: var(--text-muted); margin-bottom: 10px;
+    }
+    .btn-ub-resend {
+      font-size: 12px; font-weight: 600; padding: 7px 14px;
+      background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.3);
+      color: #FCD34D; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-ub-resend:hover:not(:disabled) { background: rgba(251,191,36,0.2); }
+    .btn-ub-resend:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ub-resend-msg { font-size: 11px; margin-top: 6px; display: none; }
+    .ub-resend-msg.show { display: block; }
+
+    /* Verified success toast */
+    .verified-toast {
+      display: none;
+      padding: 12px 16px;
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 10px;
+      font-size: 13px; font-weight: 600;
+      color: var(--success);
+      margin-bottom: 16px;
+      text-align: center;
+      animation: toastIn 0.4s ease both;
+    }
+    @keyframes toastIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <div class="login-card">
+    <div id="login-logo" class="login-logo">
+      <img src="assets/logo.png" alt="Infinity Coders">
+      <h1>Infinity Coders</h1>
+      <p>Smart Enquiry &amp; Demo Scheduling Portal</p>
+    </div>
+
+    <!-- Verified success toast (shown when ?verified=1) -->
+    <div id="verified-toast" class="verified-toast">
+      ✅ Email verified! You can now log in.
+    </div>
+
+    <!-- Unverified account banner -->
+    <div id="unverified-banner" class="unverified-banner">
+      <div class="ub-title">⚠️ Email Not Verified</div>
+      <div class="ub-msg">Your account exists but hasn't been verified yet. Check your inbox for the verification link.</div>
+      <button class="btn-ub-resend" id="btn-ub-resend" onclick="ubResend()">Resend Verification Email</button>
+      <div class="ub-resend-msg" id="ub-resend-msg"></div>
+    </div>
+
+    <div class="role-tabs">
+      <button class="role-tab active" data-role="admin" onclick="setRole('admin',this)">🔑 Admin</button>
+      <button class="role-tab" data-role="counselor" onclick="setRole('counselor',this)">👤 Counselor</button>
+    </div>
+
+    <div id="error-msg" class="error-msg"></div>
+
+    <form id="login-form" onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <div class="input-wrap">
+          <span class="icon">✉️</span>
+          <input type="email" id="email" class="form-control" placeholder="your@email.com" required autocomplete="email">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <span class="icon">🔒</span>
+          <input type="password" id="password" class="form-control" placeholder="Enter your password" required id="pw">
+          <button type="button" class="toggle-pass" onclick="togglePw()">👁️</button>
+        </div>
+      </div>
+      <button type="submit" class="login-btn" id="login-btn">
+        <span id="btn-text">Login →</span>
+      </button>
+    </form>
+
+    <div class="demo-hint" id="demo-hint">
+      <p><strong>Admin:</strong> admin@infinitycoders.com / Admin@123</p>
+      <p style="margin-top:4px"><strong>Counselor:</strong> priya@infinitycoders.com / Counselor@123</p>
+    </div>
+
+    <div class="back-link" style="display:flex;gap:20px;justify-content:center">
+      <a href="index.html">← Back to Home</a>
+      <span style="color:var(--border)">|</span>
+      <a href="signup.html" style="color:var(--primary-light);font-weight:600">✨ Sign Up for Free →</a>
+    </div>
+  </div>
+
+  <script>
+    let selectedRole = 'admin';
+    let _unverifiedEmail = '';
+
+    // Show verified success toast from ?verified=1
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get('verified');
+      if (v === '1') {
+        document.getElementById('verified-toast').style.display = 'block';
+        // Clean URL
+        window.history.replaceState({}, '', '/login.html');
+      } else if (v === 'error') {
+        const reason = params.get('reason');
+        const errDiv = document.getElementById('error-msg');
+        errDiv.textContent = reason === 'expired'
+          ? '❌ Verification link expired. Please request a new one below.'
+          : '❌ Invalid verification link. Please request a new one below.';
+        errDiv.style.display = 'block';
+        window.history.replaceState({}, '', '/login.html');
+      }
+    })();
+
+    function setRole(role, el) {
+      selectedRole = role;
+      document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      if (role === 'admin') {
+        document.getElementById('email').value = 'admin@infinitycoders.com';
+        document.getElementById('password').value = 'Admin@123';
+      } else {
+        document.getElementById('email').value = 'priya@infinitycoders.com';
+        document.getElementById('password').value = 'Counselor@123';
+      }
+    }
+
+    function togglePw() {
+      const pw = document.getElementById('password');
+      pw.type = pw.type === 'password' ? 'text' : 'password';
+    }
+
+    async function doLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      const errDiv = document.getElementById('error-msg');
+      errDiv.style.display = 'none';
+      btn.disabled = true;
+      document.getElementById('btn-text').innerHTML = '<span class="spinner"></span> Logging in…';
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('ic_token', data.token);
+          localStorage.setItem('ic_user', JSON.stringify(data.user));
+          if (data.user.role === 'admin') {
+            window.location.href = '/admin/index.html';
+          } else {
+            window.location.href = '/counselor/index.html';
+          }
+        } else if (res.status === 403 && data.unverified) {
+          // Email not verified
+          _unverifiedEmail = data.email || document.getElementById('email').value;
+          document.getElementById('unverified-banner').style.display = 'block';
+          document.getElementById('verified-toast').style.display = 'none';
+          errDiv.style.display = 'none';
+          btn.disabled = false;
+          document.getElementById('btn-text').textContent = 'Login →';
+        } else {
+          errDiv.textContent = data.error || 'Invalid credentials';
+          errDiv.style.display = 'block';
+          btn.disabled = false;
+          document.getElementById('btn-text').textContent = 'Login →';
+        }
+      } catch (err) {
+        errDiv.textContent = 'Server error. Make sure the backend is running.';
+        errDiv.style.display = 'block';
+        btn.disabled = false;
+        document.getElementById('btn-text').textContent = 'Login →';
+      }
+    }
+
+    // Resend from the unverified banner
+    async function ubResend() {
+      const btn = document.getElementById('btn-ub-resend');
+      const msg = document.getElementById('ub-resend-msg');
+      const email = _unverifiedEmail || document.getElementById('email').value;
+      if (!email) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      msg.className = 'ub-resend-msg';
+
+      try {
+        const res = await fetch('/api/auth/resend-verification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (res.status === 429) {
+          msg.textContent = data.error || 'Please wait before requesting again.';
+          msg.style.color = '#FCA5A5';
+        } else {
+          msg.textContent = '✅ ' + (data.message || 'Verification email sent!');
+          msg.style.color = '#6EE7B7';
+        }
+        msg.classList.add('show');
+        let secs = data.cooldown || 180;
+        const iv = setInterval(() => {
+          secs--;
+          btn.textContent = `Resend in ${secs}s`;
+          if (secs <= 0) {
+            clearInterval(iv);
+            btn.disabled = false;
+            btn.textContent = 'Resend Verification Email';
+          }
+        }, 1000);
+      } catch(e) {
+        msg.textContent = 'Network error.';
+        msg.style.color = '#FCA5A5';
+        msg.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Resend Verification Email';
+      }
+    }
+  </script>
+</body>
+</html>

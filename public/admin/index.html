@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Dashboard – Admin | Infinity Coders</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../assets/animations.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="icon" href="../assets/logo.png" type="image/png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="../assets/utils.js"></script>
+</head>
+
+<body>
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo"><img src="../assets/logo.png" alt="Logo"><span>Infinity Coders</span><span
+          class="role-badge">Admin</span></div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main Menu</div>
+        <a href="index.html" class="nav-item active"><span class="nav-icon">📊</span>Dashboard</a>
+        <a href="enquiries.html" class="nav-item"><span class="nav-icon">📋</span>Enquiries</a>
+        <a href="demos.html" class="nav-item"><span class="nav-icon">📅</span>Demo Schedule</a>
+        <div class="nav-section-label">Management</div>
+        <a href="counselors.html" class="nav-item"><span class="nav-icon">👥</span>Counselors</a>
+        <a href="reports.html" class="nav-item"><span class="nav-icon">📈</span>Reports & Export</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="user-avatar" id="sidebar-avatar">A</div>
+          <div class="user-info">
+            <div class="name" id="sidebar-user-name">Admin</div>
+            <div class="role" id="sidebar-user-role">Administrator</div>
+          </div><button class="logout-btn" data-tip="Logout" onclick="logout()">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content" id="main-scroll">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="hamburger" id="hamburger">☰</button>
+          <div>
+            <div class="topbar-title" id="greeting-text">Dashboard</div>
+            <div style="font-size:11px;color:var(--text-muted)" id="today-date"></div>
+          </div>
+        </div>
+        <div class="topbar-right" id="topbar-right-zone">
+          <div id="global-search-mount"></div>
+          <div class="time-badge">🕐 <span id="clock"></span></div>
+          <div id="notif-zone"></div>
+          <a href="enquiries.html" class="btn btn-primary btn-sm">+ Add Enquiry</a>
+        </div>
+      </div>
+
+      <div class="page-content">
+        <!-- Stats Row with skeleton first -->
+        <div class="stats-row" id="stats-row">
+          <div class="stat-card skeleton-card">
+            <div class="skeleton skeleton-text lg"></div>
+            <div class="skeleton skeleton-text sm" style="margin-top:8px"></div>
+          </div>
+          <div class="stat-card skeleton-card">
+            <div class="skeleton skeleton-text lg"></div>
+            <div class="skeleton skeleton-text sm" style="margin-top:8px"></div>
+          </div>
+          <div class="stat-card skeleton-card">
+            <div class="skeleton skeleton-text lg"></div>
+            <div class="skeleton skeleton-text sm" style="margin-top:8px"></div>
+          </div>
+          <div class="stat-card skeleton-card">
+            <div class="skeleton skeleton-text lg"></div>
+            <div class="skeleton skeleton-text sm" style="margin-top:8px"></div>
+          </div>
+        </div>
+
+        <!-- Status progress bars -->
+        <div class="chart-card reveal" style="margin-top:0;padding:20px 24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div class="chart-title">📊 Lead Pipeline</div>
+            <div id="pipeline-total" style="font-size:12px;color:var(--text-muted)"></div>
+          </div>
+          <div id="pipeline-bars" style="display:flex;flex-direction:column;gap:12px"></div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-row" style="margin-top:20px">
+          <div class="chart-card reveal reveal-delay-1">
+            <div class="chart-title">Course-wise Enquiries</div>
+            <div class="chart-sub">Distribution by stream</div>
+            <canvas id="streamChart" height="220"></canvas>
+          </div>
+          <div class="chart-card reveal reveal-delay-2">
+            <div class="chart-title">Monthly Trend</div>
+            <div class="chart-sub">Enquiries received per month</div>
+            <canvas id="monthlyChart" height="220"></canvas>
+          </div>
+        </div>
+
+        <div class="charts-row" style="margin-top:20px">
+          <div class="chart-card reveal" style="max-width:340px">
+            <div class="chart-title">Status Distribution</div>
+            <div class="chart-sub">Lead stage breakdown</div>
+            <canvas id="statusChart" height="240"></canvas>
+          </div>
+          <div class="chart-card reveal reveal-delay-1" style="flex:1">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <div>
+                <div class="chart-title">Recent Enquiries</div>
+                <div class="chart-sub">Latest student leads</div>
+              </div>
+              <a href="enquiries.html" class="btn btn-secondary btn-sm">View All →</a>
+            </div>
+            <div id="recent-list">
+              <div class="skeleton-row">
+                <div class="skeleton skeleton-avatar"></div>
+                <div style="flex:1">
+                  <div class="skeleton skeleton-cell" style="width:60%;margin-bottom:6px"></div>
+                  <div class="skeleton skeleton-cell" style="width:40%"></div>
+                </div>
+                <div class="skeleton skeleton-badge"></div>
+              </div>
+              <div class="skeleton-row">
+                <div class="skeleton skeleton-avatar"></div>
+                <div style="flex:1">
+                  <div class="skeleton skeleton-cell" style="width:60%;margin-bottom:6px"></div>
+                  <div class="skeleton skeleton-cell" style="width:40%"></div>
+                </div>
+                <div class="skeleton skeleton-badge"></div>
+              </div>
+              <div class="skeleton-row">
+                <div class="skeleton skeleton-avatar"></div>
+                <div style="flex:1">
+                  <div class="skeleton skeleton-cell" style="width:60%;margin-bottom:6px"></div>
+                  <div class="skeleton skeleton-cell" style="width:40%"></div>
+                </div>
+                <div class="skeleton skeleton-badge"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="../assets/animate.js"></script>
+  <script>
+    const user = requireAuth('admin');
+    if (user) {
+      initSidebar('admin');
+      const hour = new Date().getHours();
+      const greeting = hour < 12 ? '☀️ Good morning' : hour < 17 ? '🌤️ Good afternoon' : '🌙 Good evening';
+      document.getElementById('greeting-text').textContent = `${greeting}, ${user.name}`;
+      document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      // Init features
+      initGlobalSearch('global-search-mount');
+      initNotifications('notif-zone');
+      initFAB([
+        { icon: '📋', label: 'New Enquiry', href: 'enquiries.html' },
+        { icon: '📅', label: 'Schedule Demo', href: 'demos.html' },
+        { icon: '📈', label: 'View Reports', href: 'reports.html' },
+      ]);
+    }
+
+    Chart.defaults.color = '#94A3B8';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+
+    const statusColors = { 'New': '#818CF8', 'Contacted': '#60A5FA', 'Interested': '#FCD34D', 'Not Interested': '#F87171', 'Converted': '#34D399' };
+
+    async function loadDashboard() {
+      const [sumRes, streamRes, statusRes, monthRes, recentRes] = await Promise.all([
+        apiFetch('/api/analytics/summary'),
+        apiFetch('/api/analytics/stream-wise'),
+        apiFetch('/api/analytics/status-wise'),
+        apiFetch('/api/analytics/monthly'),
+        apiFetch('/api/analytics/recent-enquiries')
+      ]);
+
+      // ── Stats ──
+      const sum = await sumRes.json();
+      const statsRow = document.getElementById('stats-row');
+      statsRow.innerHTML = `
+    <div class="stat-card" style="cursor:pointer" onclick="location.href='enquiries.html'">
+      <div class="stat-icon" style="background:rgba(108,43,217,0.15)">📋</div>
+      <div class="stat-info">
+        <div class="value"><span class="counter-num" data-target="${sum.total}">0</span></div>
+        <div class="label">Total Enquiries</div>
+        <div style="font-size:11px;color:var(--success);margin-top:4px">↑ All time</div>
+      </div>
+    </div>
+    <div class="stat-card" onclick="location.href='enquiries.html'" style="cursor:pointer">
+      <div class="stat-icon" style="background:rgba(16,185,129,0.15)">✅</div>
+      <div class="stat-info">
+        <div class="value"><span class="counter-num" data-target="${sum.converted}">0</span></div>
+        <div class="label">Converted</div>
+        <div style="font-size:11px;color:var(--success);margin-top:4px">${sum.conversion_rate}% rate</div>
+      </div>
+    </div>
+    <div class="stat-card" onclick="location.href='demos.html'" style="cursor:pointer">
+      <div class="stat-icon" style="background:rgba(0,194,255,0.15)">📅</div>
+      <div class="stat-info">
+        <div class="value"><span class="counter-num" data-target="${sum.demos_today}">0</span></div>
+        <div class="label">Demos Today</div>
+        <div style="font-size:11px;color:var(--accent);margin-top:4px">Today's sessions</div>
+      </div>
+    </div>
+    <div class="stat-card" onclick="location.href='enquiries.html'" style="cursor:pointer">
+      <div class="stat-icon" style="background:rgba(245,158,11,0.15)">⭐</div>
+      <div class="stat-info">
+        <div class="value"><span class="counter-num" data-target="${sum.interested}">0</span></div>
+        <div class="label">Interested</div>
+        <div style="font-size:11px;color:var(--warning);margin-top:4px">Hot leads</div>
+      </div>
+    </div>
+  `;
+      // Animate counters
+      statsRow.querySelectorAll('.counter-num').forEach(el => {
+        const target = parseInt(el.dataset.target);
+        animateCounter(el, target);
+      });
+
+      // ── Pipeline bars ──
+      const statusData = await statusRes.json();
+      const total = sum.total || 1;
+      const pipelineColors = { 'New': '#818CF8', 'Contacted': '#60A5FA', 'Interested': '#FCD34D', 'Not Interested': '#F87171', 'Converted': '#34D399' };
+      const bars = document.getElementById('pipeline-bars');
+      document.getElementById('pipeline-total').textContent = `${sum.total} total leads`;
+      bars.innerHTML = statusData.map(s => `
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${pipelineColors[s.status]};box-shadow:0 0 6px ${pipelineColors[s.status]}"></div>
+          <span style="font-size:13px;font-weight:500">${s.status}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;font-weight:700">${s.count}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${((s.count / total) * 100).toFixed(0)}%</span>
+        </div>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" data-value="${((s.count / total) * 100).toFixed(0)}" style="background:${pipelineColors[s.status]};opacity:0.8"></div>
+      </div>
+    </div>
+  `).join('');
+      setTimeout(animateProgressBars, 400);
+
+      // ── Stream Chart ──
+      const streamData = await streamRes.json();
+      new Chart(document.getElementById('streamChart'), {
+        type: 'bar',
+        data: {
+          labels: streamData.map(d => d.stream.length > 14 ? d.stream.slice(0, 14) + '…' : d.stream),
+          datasets: [{
+            label: 'Enquiries',
+            data: streamData.map(d => d.count),
+            backgroundColor: ['rgba(108,43,217,0.8)', 'rgba(0,194,255,0.8)', 'rgba(16,185,129,0.8)', 'rgba(245,158,11,0.8)', 'rgba(239,68,68,0.8)', 'rgba(139,92,246,0.8)', 'rgba(236,72,153,0.8)'],
+            borderRadius: 8, borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true, animation: { duration: 1000, easing: 'easeOutQuart' },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} enquiries` } } },
+          scales: { x: { ticks: { color: '#94A3B8', maxRotation: 30 }, grid: { display: false } }, y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true } }
+        }
+      });
+
+      // ── Monthly Chart ──
+      const monthData = await monthRes.json();
+      new Chart(document.getElementById('monthlyChart'), {
+        type: 'line',
+        data: {
+          labels: monthData.map(d => d.month),
+          datasets: [
+            { label: 'Enquiries', data: monthData.map(d => d.count), borderColor: '#6C2BD9', backgroundColor: 'rgba(108,43,217,0.12)', fill: true, tension: 0.4, pointBackgroundColor: '#6C2BD9', pointRadius: 5, pointHoverRadius: 7 },
+            { label: 'Converted', data: monthData.map(d => d.converted), borderColor: '#34D399', backgroundColor: 'rgba(52,211,153,0.08)', fill: true, tension: 0.4, pointBackgroundColor: '#34D399', pointRadius: 4, pointHoverRadius: 6 }
+          ]
+        },
+        options: {
+          responsive: true, animation: { duration: 1200, easing: 'easeOutCubic' },
+          plugins: { legend: { labels: { color: '#94A3B8', font: { size: 12 } } } },
+          scales: { x: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,0.05)' } }, y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true } }
+        }
+      });
+
+      // ── Status Doughnut ──
+      new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+          labels: statusData.map(d => d.status),
+          datasets: [{ data: statusData.map(d => d.count), backgroundColor: statusData.map(d => statusColors[d.status] || '#94A3B8'), borderWidth: 0, hoverOffset: 12 }]
+        },
+        options: {
+          responsive: true, cutout: '65%',
+          animation: { animateRotate: true, duration: 1000, easing: 'easeOutQuart' },
+          plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8', font: { size: 11 }, padding: 14 } } }
+        }
+      });
+
+      // ── Recent Enquiries ──
+      const recent = await recentRes.json();
+      const list = document.getElementById('recent-list');
+      list.innerHTML = recent.length ? recent.map(e => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;border-radius:6px;padding:10px 8px" onmouseenter="this.style.background='rgba(108,43,217,0.06)'" onmouseleave="this.style.background=''">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="user-avatar" style="width:34px;height:34px;font-size:13px;flex-shrink:0">${e.student_name.charAt(0)}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600">${e.student_name}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${e.stream} · ${fmtDate(e.created_at)}</div>
+        </div>
+      </div>
+      ${statusBadge(e.status)}
+    </div>
+  `).join('') : '<p style="color:var(--text-muted);font-size:14px">No enquiries yet.</p>';
+
+      // Trigger reveal animations
+      document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => {
+        revealObserver.observe(el);
+        // Trigger for elements already in view
+        setTimeout(() => el.classList.add('visible'), 100);
+      });
+    }
+
+    loadDashboard();
+  </script>
+</body>
+
+</html>

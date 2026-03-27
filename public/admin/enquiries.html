@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Enquiries – Admin | Infinity Coders</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../assets/animations.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="icon" href="../assets/logo.png" type="image/png">
+  <script src="../assets/utils.js"></script>
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="enquiry-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add New Enquiry</div>
+      <button class="modal-close" onclick="closeModal('enquiry-modal')">✕</button>
+    </div>
+    <form id="enquiry-form" onsubmit="saveEnquiry(event)">
+      <input type="hidden" id="enq-id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group"><label class="form-label">Student Name *</label><input class="form-control" id="enq-name" required placeholder="Full name"></div>
+        <div class="form-group"><label class="form-label">Contact Number *</label><input class="form-control" id="enq-contact" required placeholder="10-digit mobile"></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" id="enq-email" placeholder="student@email.com"></div>
+        <div class="form-group"><label class="form-label">Education Qualification</label><input class="form-control" id="enq-education" placeholder="e.g. BSc, BCA, MCA"></div>
+        <div class="form-group"><label class="form-label">Course / Stream *</label><select class="form-control" id="enq-stream" required><option value="">Select Stream</option></select></div>
+        <div class="form-group"><label class="form-label">Enquiry Source</label><select class="form-control" id="enq-source"></select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="enq-status"></select></div>
+        <div class="form-group"><label class="form-label">Assign Counselor</label><select class="form-control" id="enq-counselor"><option value="">Unassigned</option></select></div>
+        <div class="form-group"><label class="form-label">Follow-up Date</label><input type="date" class="form-control" id="enq-followup"></div>
+        <div class="form-group" style="grid-column:span 2"><label class="form-label">Notes</label><textarea class="form-control" id="enq-notes" rows="2" placeholder="Any additional notes…"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('enquiry-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="save-btn">Save Enquiry</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Follow-up Notes Modal -->
+<div class="modal-overlay" id="followup-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📌 Follow-up Timeline</div>
+      <button class="modal-close" onclick="closeModal('followup-modal')">✕</button>
+    </div>
+    <div id="followup-list" style="margin-bottom:16px;max-height:300px;overflow-y:auto"></div>
+    <div class="form-group">
+      <label class="form-label">Add New Note</label>
+      <textarea class="form-control" id="new-note" rows="3" placeholder="What was discussed?"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('followup-modal')">Close</button>
+      <button class="btn btn-primary" onclick="addFollowupNote()">Add Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- Schedule Demo Modal -->
+<div class="modal-overlay" id="demo-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📅 Schedule Demo Session</div>
+      <button class="modal-close" onclick="closeModal('demo-modal')">✕</button>
+    </div>
+    <input type="hidden" id="demo-enq-id">
+    <div class="form-group"><label class="form-label">Date *</label><input type="date" class="form-control" id="demo-date" required></div>
+    <div class="form-group"><label class="form-label">Time *</label><input type="time" class="form-control" id="demo-time" required></div>
+    <div class="form-group"><label class="form-label">Mode</label><select class="form-control" id="demo-mode"><option>Online</option><option>Offline</option></select></div>
+    <div class="form-group"><label class="form-label">Location / Link</label><input class="form-control" id="demo-location" placeholder="Meeting link or venue"></div>
+    <div class="form-group"><label class="form-label">Counselor</label><select class="form-control" id="demo-counselor"></select></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('demo-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="scheduleDemo()">📅 Schedule & Notify Student</button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><img src="../assets/logo.png" alt="Logo"><span>Infinity Coders</span><span class="role-badge">Admin</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <a href="index.html" class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="enquiries.html" class="nav-item active"><span class="nav-icon">📋</span>Enquiries</a>
+      <a href="demos.html" class="nav-item"><span class="nav-icon">📅</span>Demo Schedule</a>
+      <div class="nav-section-label">Management</div>
+      <a href="counselors.html" class="nav-item"><span class="nav-icon">👥</span>Counselors</a>
+      <a href="reports.html" class="nav-item"><span class="nav-icon">📈</span>Reports & Export</a>
+    </nav>
+    <div class="sidebar-footer"><div class="user-card"><div class="user-avatar" id="sidebar-avatar">A</div><div class="user-info"><div class="name" id="sidebar-user-name">Admin</div><div class="role" id="sidebar-user-role">Administrator</div></div><button class="logout-btn" onclick="logout()">⏻</button></div></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px"><button class="hamburger" id="hamburger">☰</button><div class="topbar-title">📋 Enquiries</div></div>
+      <div class="topbar-right"><div class="time-badge">🕐 <span id="clock"></span></div><button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Enquiry</button></div>
+    </div>
+    <div class="page-content">
+      <!-- Filters -->
+      <div class="filters-bar">
+        <div class="search-wrap"><span class="s-icon">🔍</span><input class="form-control" id="search-input" placeholder="Search name, phone, email… (Ctrl+F)" oninput="loadEnquiries()"></div>
+        <select class="form-control" id="filter-status" onchange="loadEnquiries()"><option value="">All Statuses</option></select>
+        <select class="form-control" id="filter-stream" onchange="loadEnquiries()"><option value="">All Streams</option></select>
+        <select class="form-control" id="filter-counselor" onchange="loadEnquiries()"><option value="">All Counselors</option></select>
+        <button class="btn btn-secondary btn-sm" data-tip="Clear all filters" onclick="clearFilters()">✕ Clear</button>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+          <span style="color:var(--text-muted);font-size:13px" id="count-label"></span>
+          <button class="btn btn-success btn-sm" onclick="exportCSV()" data-tip="Download CSV">📥 CSV</button>
+        </div>
+      </div>
+
+      <!-- Skeleton loader (shown while loading) -->
+      <div id="skeleton-loader" class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Student</th><th>Contact</th><th>Stream</th><th>Source</th><th>Status</th><th>Counselor</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${[1,2,3,4,5].map(() => `<tr>
+              <td><div class="skeleton skeleton-cell" style="width:30px"></div></td>
+              <td><div class="skeleton skeleton-cell" style="width:120px;margin-bottom:4px"></div><div class="skeleton skeleton-cell" style="width:80px"></div></td>
+              <td><div class="skeleton skeleton-cell" style="width:90px"></div></td>
+              <td><div class="skeleton skeleton-cell" style="width:80px"></div></td>
+              <td><div class="skeleton skeleton-cell" style="width:70px"></div></td>
+              <td><div class="skeleton skeleton-badge"></div></td>
+              <td><div class="skeleton skeleton-cell" style="width:80px"></div></td>
+              <td><div style="display:flex;gap:6px">${[1,2,3].map(() => `<div class="skeleton skeleton-cell" style="width:28px;height:28px;border-radius:6px"></div>`).join('')}</div></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Real table -->
+      <div id="real-table" class="table-wrapper" style="display:none">
+        <table class="data-table">
+          <thead><tr>
+            <th>#</th><th>Student Name</th><th>Contact</th><th>Stream</th>
+            <th>Source</th><th>Status</th><th>Counselor</th><th>Follow-up</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/animate.js"></script>
+<script>
+const user = requireAuth('admin');
+if (user) initSidebar('admin');
+let counselors = [];
+let currentFollowupEnqId = null;
+
+// Ctrl+F focuses the search
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f') { e.preventDefault(); document.getElementById('search-input').focus(); }
+});
+
+async function initFilters() {
+  STATUSES.forEach(s => { const o=document.createElement('option');o.value=s;o.textContent=s; document.getElementById('filter-status').appendChild(o); });
+  STREAMS.forEach(s => { const o=document.createElement('option');o.value=s;o.textContent=s; document.getElementById('filter-stream').appendChild(o); });
+  ['enq-stream','enq-source','enq-status'].forEach((id, i) => {
+    const arr = [STREAMS, SOURCES, STATUSES][i];
+    arr.forEach(v => { const o=document.createElement('option');o.value=v;o.textContent=v; document.getElementById(id).appendChild(o); });
+  });
+  const res = await apiFetch('/api/counselors');
+  if (res && res.ok) {
+    counselors = await res.json();
+    counselors.forEach(c => {
+      ['filter-counselor','enq-counselor','demo-counselor'].forEach(id => {
+        const o=document.createElement('option');o.value=c.id;o.textContent=c.name;
+        document.getElementById(id).appendChild(o);
+      });
+    });
+  }
+}
+
+async function loadEnquiries() {
+  const search = document.getElementById('search-input').value;
+  const status = document.getElementById('filter-status').value;
+  const stream = document.getElementById('filter-stream').value;
+  const counselor_id = document.getElementById('filter-counselor').value;
+  const query = `?search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}&stream=${encodeURIComponent(stream)}&counselor_id=${counselor_id}`;
+  const res = await apiFetch('/api/enquiries' + query);
+  if (!res || !res.ok) return;
+  const data = await res.json();
+  document.getElementById('count-label').textContent = `${data.length} record${data.length!==1?'s':''}`;
+
+  // Hide skeleton, show table
+  document.getElementById('skeleton-loader').style.display = 'none';
+  document.getElementById('real-table').style.display = 'block';
+
+  const tbody = document.getElementById('table-body');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="icon">🔍</div><h3>No enquiries found</h3><p>Try adjusting your filters</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(e => `
+    <tr onclick="viewEnquiry(${e.id})" style="cursor:pointer">
+      <td style="color:var(--text-muted);font-size:12px">#${e.id}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="user-avatar" style="width:30px;height:30px;font-size:12px;flex-shrink:0">${e.student_name.charAt(0)}</div>
+          <div>
+            <div style="font-weight:600">${e.student_name}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${e.email||''}</div>
+          </div>
+        </div>
+      </td>
+      <td>${e.contact}</td>
+      <td><span style="font-size:12px;background:rgba(108,43,217,0.1);padding:3px 8px;border-radius:6px">${e.stream}</span></td>
+      <td style="color:var(--text-muted);font-size:12px">${e.source}</td>
+      <td>${statusBadge(e.status)}</td>
+      <td style="font-size:12px">${e.counselor_name||'<span style="color:var(--text-muted)">—</span>'}</td>
+      <td style="font-size:12px">${e.followup_date?'<span style="color:var(--warning)">📅 '+fmtDate(e.followup_date)+'</span>':'<span style="color:var(--text-muted)">—</span>'}</td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-secondary btn-sm btn-icon" data-tip="Edit" onclick="editEnquiry(${e.id})">✏️</button>
+          <button class="btn btn-secondary btn-sm btn-icon" data-tip="Follow-ups" onclick="openFollowups(${e.id})">📌</button>
+          <button class="btn btn-secondary btn-sm btn-icon" data-tip="Schedule Demo" onclick="openDemoModal(${e.id})">📅</button>
+          <button class="btn btn-danger btn-sm btn-icon" data-tip="Delete" onclick="deleteEnquiry(${e.id},'${e.student_name}')">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function viewEnquiry(id) {
+  const res = await apiFetch('/api/enquiries/' + id);
+  if (!res || !res.ok) return;
+  const e = await res.json();
+  const followRes = await apiFetch('/api/followups/' + id);
+  const followups = followRes && followRes.ok ? await followRes.json() : [];
+
+  const content = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+      <div class="user-avatar" style="width:52px;height:52px;font-size:20px">${e.student_name.charAt(0)}</div>
+      <div>
+        <div style="font-size:18px;font-weight:700">${e.student_name}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${e.stream} · Added ${fmtDate(e.created_at)}</div>
+        <div style="margin-top:6px">${statusBadge(e.status)}</div>
+      </div>
+    </div>
+    <div class="detail-row"><span class="detail-label">📞 Contact</span><span class="detail-value">${e.contact}</span></div>
+    <div class="detail-row"><span class="detail-label">📧 Email</span><span class="detail-value">${e.email || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">🎓 Education</span><span class="detail-value">${e.education || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">📚 Stream</span><span class="detail-value">${e.stream}</span></div>
+    <div class="detail-row"><span class="detail-label">🔗 Source</span><span class="detail-value">${e.source}</span></div>
+    <div class="detail-row"><span class="detail-label">👤 Counselor</span><span class="detail-value">${e.counselor_name || 'Unassigned'}</span></div>
+    <div class="detail-row"><span class="detail-label">📅 Follow-up</span><span class="detail-value">${e.followup_date ? fmtDate(e.followup_date) : '—'}</span></div>
+    ${e.notes ? `<div class="detail-row"><span class="detail-label">📝 Notes</span><span class="detail-value" style="font-size:13px;color:var(--text-secondary)">${e.notes}</span></div>` : ''}
+    <div style="margin-top:20px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text-secondary)">📌 Follow-up Timeline (${followups.length})</div>
+      ${followups.length ? followups.map(f => `
+        <div class="timeline-item">
+          <div style="position:relative;display:flex;flex-direction:column;align-items:center">
+            <div class="timeline-dot"></div>
+          </div>
+          <div class="timeline-content" style="padding-bottom:10px">
+            <div class="t-title">${f.note}</div>
+            <div class="t-time">By ${f.counselor_name} · ${fmtDateTime(f.created_at)}</div>
+          </div>
+        </div>
+      `).join('') : '<p style="color:var(--text-muted);font-size:13px">No follow-up notes yet.</p>'}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="closeSlidePanel();editEnquiry(${e.id})">✏️ Edit</button>
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="closeSlidePanel();openFollowups(${e.id})">📌 Add Note</button>
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="closeSlidePanel();openDemoModal(${e.id})">📅 Demo</button>
+    </div>
+  `;
+  openSlidePanel(content, '🎓 Student Details');
+}
+
+function clearFilters() {
+  ['search-input','filter-status','filter-stream','filter-counselor'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el.tagName === 'SELECT') el.value = '';
+    else el.value = '';
+  });
+  loadEnquiries();
+}
+
+function openAddModal() {
+  document.getElementById('modal-title').textContent = 'Add New Enquiry';
+  document.getElementById('enq-id').value = '';
+  document.getElementById('enquiry-form').reset();
+  openModal('enquiry-modal');
+}
+
+async function editEnquiry(id) {
+  const res = await apiFetch('/api/enquiries/' + id);
+  if (!res || !res.ok) return;
+  const e = await res.json();
+  document.getElementById('modal-title').textContent = 'Edit Enquiry';
+  document.getElementById('enq-id').value = e.id;
+  document.getElementById('enq-name').value = e.student_name;
+  document.getElementById('enq-contact').value = e.contact;
+  document.getElementById('enq-email').value = e.email||'';
+  document.getElementById('enq-education').value = e.education||'';
+  document.getElementById('enq-stream').value = e.stream;
+  document.getElementById('enq-source').value = e.source;
+  document.getElementById('enq-status').value = e.status;
+  document.getElementById('enq-counselor').value = e.counselor_id||'';
+  document.getElementById('enq-followup').value = e.followup_date||'';
+  document.getElementById('enq-notes').value = e.notes||'';
+  openModal('enquiry-modal');
+}
+
+async function saveEnquiry(e) {
+  e.preventDefault();
+  const id = document.getElementById('enq-id').value;
+  const payload = {
+    student_name: document.getElementById('enq-name').value,
+    contact: document.getElementById('enq-contact').value,
+    email: document.getElementById('enq-email').value,
+    education: document.getElementById('enq-education').value,
+    stream: document.getElementById('enq-stream').value,
+    source: document.getElementById('enq-source').value,
+    status: document.getElementById('enq-status').value,
+    counselor_id: document.getElementById('enq-counselor').value||null,
+    followup_date: document.getElementById('enq-followup').value||null,
+    notes: document.getElementById('enq-notes').value
+  };
+  const btn = document.getElementById('save-btn');
+  btn.disabled=true; btn.textContent='Saving…';
+  const res = await apiFetch(id ? `/api/enquiries/${id}` : '/api/enquiries', { method: id?'PUT':'POST', body: JSON.stringify(payload) });
+  btn.disabled=false; btn.textContent='Save Enquiry';
+  if (res && res.ok) { closeModal('enquiry-modal'); showToast(id?'Enquiry updated!':'Enquiry added!','success'); loadEnquiries(); }
+  else { const d=await res.json(); showToast(d.error||'Failed','error'); }
+}
+
+async function deleteEnquiry(id, name) {
+  if (!confirm(`Delete enquiry for "${name}"? This cannot be undone.`)) return;
+  const res = await apiFetch('/api/enquiries/'+id, { method:'DELETE' });
+  if (res && res.ok) { showToast('Enquiry deleted','success'); loadEnquiries(); }
+  else showToast('Failed','error');
+}
+
+async function openFollowups(id) {
+  currentFollowupEnqId=id;
+  document.getElementById('new-note').value='';
+  openModal('followup-modal');
+  await loadFollowups(id);
+}
+
+async function loadFollowups(id) {
+  const res = await apiFetch('/api/followups/'+id);
+  const list = document.getElementById('followup-list');
+  if (!res || !res.ok) { list.innerHTML='<p style="color:var(--text-muted)">No notes yet.</p>'; return; }
+  const notes = await res.json();
+  list.innerHTML = notes.length ? notes.map(n => `
+    <div style="padding:12px;background:var(--bg-card2);border-radius:10px;margin-bottom:8px;border-left:3px solid var(--primary)" class="reveal visible">
+      <div style="font-size:13px">${n.note}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">👤 ${n.counselor_name} · ${fmtDateTime(n.created_at)}</div>
+    </div>
+  `).join('') : '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px">No follow-up notes yet. Add the first one! 👇</p>';
+}
+
+async function addFollowupNote() {
+  const note = document.getElementById('new-note').value.trim();
+  if (!note) { showToast('Enter a note first','warning'); return; }
+  const res = await apiFetch('/api/followups', { method:'POST', body: JSON.stringify({enquiry_id:currentFollowupEnqId, note}) });
+  if (res && res.ok) { document.getElementById('new-note').value=''; showToast('Note added!','success'); loadFollowups(currentFollowupEnqId); }
+  else showToast('Failed','error');
+}
+
+function openDemoModal(id) { document.getElementById('demo-enq-id').value=id; document.getElementById('demo-date').valueAsDate=new Date(); openModal('demo-modal'); }
+
+async function scheduleDemo() {
+  const payload = { enquiry_id:document.getElementById('demo-enq-id').value, demo_date:document.getElementById('demo-date').value, demo_time:document.getElementById('demo-time').value, mode:document.getElementById('demo-mode').value, location:document.getElementById('demo-location').value, counselor_id:document.getElementById('demo-counselor').value||null };
+  if (!payload.demo_date||!payload.demo_time) { showToast('Date and time required','warning'); return; }
+  const res = await apiFetch('/api/demos', { method:'POST', body:JSON.stringify(payload) });
+  if (res && res.ok) { closeModal('demo-modal'); showToast('🎉 Demo scheduled! Student will be notified.','success'); }
+  else { const d=await res.json(); showToast(d.error||'Failed','error'); }
+}
+
+async function exportCSV() {
+  const res = await apiFetch('/api/enquiries/export/csv');
+  if (!res || !res.ok) { showToast('Export failed','error'); return; }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='enquiries_'+new Date().toISOString().slice(0,10)+'.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  showToast('CSV downloaded!','success');
+}
+
+initFilters().then(()=>loadEnquiries());
+</script>
+</body>
+</html>

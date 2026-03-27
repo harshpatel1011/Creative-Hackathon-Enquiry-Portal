@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Counselors – Admin | Infinity Coders</title>
+  <link rel="stylesheet" href="../assets/style.css">`n  <link rel="stylesheet" href="../assets/animations.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="icon" href="../assets/logo.png" type="image/png">
+  <script src="../assets/utils.js"></script>`n  <script src="../assets/animate.js" defer></script>
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="counselor-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="cmodal-title">Add Counselor</div>
+      <button class="modal-close" onclick="closeModal('counselor-modal')">✕</button>
+    </div>
+    <form onsubmit="saveCounselor(event)">
+      <input type="hidden" id="c-id">
+      <div class="form-group"><label class="form-label">Full Name *</label><input class="form-control" id="c-name" required placeholder="Counselor's full name"></div>
+      <div class="form-group"><label class="form-label">Email *</label><input type="email" class="form-control" id="c-email" required placeholder="work@infinitycoders.com"></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-control" id="c-phone" placeholder="10-digit mobile"></div>
+      <div class="form-group"><label class="form-label" id="pw-label">Password *</label><input type="password" class="form-control" id="c-password" placeholder="Min 8 characters"></div>
+      <div class="form-group" id="status-group" style="display:none">
+        <label class="form-label">Status</label>
+        <select class="form-control" id="c-active"><option value="1">Active</option><option value="0">Inactive</option></select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('counselor-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="c-save-btn">Create Counselor</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><img src="../assets/logo.png" alt="Logo"><span>Infinity Coders</span><span class="role-badge">Admin</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <a href="index.html" class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="enquiries.html" class="nav-item"><span class="nav-icon">📋</span>Enquiries</a>
+      <a href="demos.html" class="nav-item"><span class="nav-icon">📅</span>Demo Schedule</a>
+      <div class="nav-section-label">Management</div>
+      <a href="counselors.html" class="nav-item active"><span class="nav-icon">👥</span>Counselors</a>
+      <a href="reports.html" class="nav-item"><span class="nav-icon">📈</span>Reports & Export</a>
+    </nav>
+    <div class="sidebar-footer"><div class="user-card"><div class="user-avatar" id="sidebar-avatar">A</div><div class="user-info"><div class="name" id="sidebar-user-name">Admin</div><div class="role" id="sidebar-user-role">Administrator</div></div><button class="logout-btn" onclick="logout()">⏻</button></div></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px"><button class="hamburger" id="hamburger">☰</button><div class="topbar-title">Counselors</div></div>
+      <div class="topbar-right"><div class="time-badge">🕐 <span id="clock"></span></div><button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Counselor</button></div>
+    </div>
+    <div class="page-content">
+      <div id="counselors-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const user = requireAuth('admin');
+if (user) initSidebar('admin');
+
+async function loadCounselors() {
+  const res = await apiFetch('/api/counselors');
+  if (!res || !res.ok) return;
+  const counselors = await res.json();
+  const grid = document.getElementById('counselors-grid');
+  if (!counselors.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">👥</div><h3>No counselors yet</h3><p>Add your first counselor</p></div>';
+    return;
+  }
+  grid.innerHTML = counselors.map(c => `
+    <div class="card card-hover">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <div class="user-avatar" style="width:48px;height:48px;font-size:18px">${c.name.charAt(0)}</div>
+        <div>
+          <div style="font-size:16px;font-weight:700">${c.name}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${c.email}</div>
+        </div>
+        <div style="margin-left:auto">
+          <span class="badge ${c.is_active?'badge-converted':'badge-not-interested'}">${c.is_active?'Active':'Inactive'}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text-secondary);margin-bottom:16px">
+        <div>📞 ${c.phone||'Not provided'}</div>
+        <div>📋 ${c.enquiry_count} assigned enquiries</div>
+        <div>📅 Joined ${fmtDate(c.created_at)}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" style="flex:1" onclick="editCounselor(${c.id},'${c.name}','${c.email}','${c.phone||''}',${c.is_active})">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCounselor(${c.id},'${c.name}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddModal() {
+  document.getElementById('cmodal-title').textContent = 'Add Counselor';
+  document.getElementById('c-id').value = '';
+  document.getElementById('c-name').value = '';
+  document.getElementById('c-email').value = '';
+  document.getElementById('c-phone').value = '';
+  document.getElementById('c-password').value = '';
+  document.getElementById('pw-label').textContent = 'Password *';
+  document.getElementById('c-password').required = true;
+  document.getElementById('status-group').style.display = 'none';
+  document.getElementById('c-save-btn').textContent = 'Create Counselor';
+  openModal('counselor-modal');
+}
+
+function editCounselor(id, name, email, phone, isActive) {
+  document.getElementById('cmodal-title').textContent = 'Edit Counselor';
+  document.getElementById('c-id').value = id;
+  document.getElementById('c-name').value = name;
+  document.getElementById('c-email').value = email;
+  document.getElementById('c-phone').value = phone;
+  document.getElementById('c-password').value = '';
+  document.getElementById('pw-label').textContent = 'Password (leave blank to keep)';
+  document.getElementById('c-password').required = false;
+  document.getElementById('status-group').style.display = 'block';
+  document.getElementById('c-active').value = isActive ? '1' : '0';
+  document.getElementById('c-save-btn').textContent = 'Update Counselor';
+  openModal('counselor-modal');
+}
+
+async function saveCounselor(e) {
+  e.preventDefault();
+  const id = document.getElementById('c-id').value;
+  const payload = {
+    name: document.getElementById('c-name').value,
+    email: document.getElementById('c-email').value,
+    phone: document.getElementById('c-phone').value,
+    password: document.getElementById('c-password').value,
+    is_active: parseInt(document.getElementById('c-active').value||'1')
+  };
+  if (!payload.password) delete payload.password;
+  const btn = document.getElementById('c-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const res = await apiFetch(id ? `/api/counselors/${id}` : '/api/counselors', {
+    method: id ? 'PUT' : 'POST', body: JSON.stringify(payload)
+  });
+  btn.disabled = false; btn.textContent = id ? 'Update Counselor' : 'Create Counselor';
+  if (res && res.ok) {
+    closeModal('counselor-modal');
+    showToast(id ? 'Counselor updated!' : 'Counselor created!', 'success');
+    loadCounselors();
+  } else {
+    const d = await res.json();
+    showToast(d.error || 'Failed', 'error');
+  }
+}
+
+async function deleteCounselor(id, name) {
+  if (!confirm(`Remove counselor "${name}"?`)) return;
+  const res = await apiFetch('/api/counselors/' + id, { method: 'DELETE' });
+  if (res && res.ok) { showToast('Counselor removed', 'success'); loadCounselors(); }
+  else showToast('Failed to remove', 'error');
+}
+
+loadCounselors();
+</script>
+</body>
+</html>

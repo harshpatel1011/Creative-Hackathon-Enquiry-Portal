@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Infinity Coders – Smart Enquiry Portal</title>
+  <meta name="description" content="Infinity Coders' Smart Enquiry & Demo Scheduling System – Managing student enquiries efficiently across all tech streams.">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/animations.css">
+  <link rel="icon" href="assets/logo.png" type="image/png">
+
+  <style>
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 20% 50%, rgba(108,43,217,0.15) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 20%, rgba(0,194,255,0.1) 0%, transparent 50%),
+                  var(--bg-dark);
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236C2BD9' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(108,43,217,0.15); border: 1px solid rgba(108,43,217,0.3); border-radius: 99px; padding: 6px 16px; font-size: 13px; color: var(--primary-light); margin-bottom: 24px; }
+    .hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 800; line-height: 1.1; margin-bottom: 20px; }
+    .hero h1 span { background: linear-gradient(135deg, var(--primary-light), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 18px; color: var(--text-secondary); margin-bottom: 36px; line-height: 1.8; }
+    .hero-btns { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-btns .btn { padding: 14px 28px; font-size: 16px; }
+    .hero-img { position: relative; }
+    .hero-dashboard-mock {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow), var(--shadow-glow);
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    .mock-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mock-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .mock-stat { background: var(--bg-card2); border-radius: 10px; padding: 12px; }
+    .mock-stat .val { font-size: 22px; font-weight: 800; }
+    .mock-stat .lbl { font-size: 11px; color: var(--text-muted); }
+    .mock-chart { background: var(--bg-card2); border-radius: 10px; padding: 12px; height: 80px; display: flex; align-items: flex-end; gap: 4px; }
+    .mock-bar-item { flex: 1; border-radius: 4px 4px 0 0; opacity: 0.8; }
+
+    /* Floating particles */
+    .particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .particle { position: absolute; width: 4px; height: 4px; border-radius: 50%; animation: drift linear infinite; }
+    @keyframes drift { 0% { transform: translateY(100vh) scale(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(-100px) scale(1); opacity: 0; } }
+
+    /* Features */
+    .features { padding: 100px 24px; max-width: 1200px; margin: 0 auto; }
+    .section-header { text-align: center; margin-bottom: 60px; }
+    .section-tag { font-size: 13px; font-weight: 600; color: var(--primary-light); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; display: block; }
+    .section-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 700; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .feature-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); position: relative; overflow: hidden; }
+    .feature-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(135deg, rgba(108,43,217,0.08), transparent); opacity: 0; transition: opacity 0.3s; }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card:hover { border-color: var(--border-hover); transform: translateY(-6px); box-shadow: 0 24px 48px rgba(0,0,0,0.3), 0 0 0 1px rgba(108,43,217,0.2); }
+    .feature-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 16px; transition: transform 0.3s; }
+    .feature-card:hover .feature-icon { transform: scale(1.15) rotate(-5deg); }
+    .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+
+    /* Streams */
+    .streams { background: linear-gradient(180deg, transparent, rgba(108,43,217,0.05), transparent); padding: 80px 24px; }
+    .streams-inner { max-width: 1200px; margin: 0 auto; }
+    .streams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+    .stream-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 16px; text-align: center; transition: all 0.2s ease; cursor: default; }
+    .stream-card:hover { border-color: var(--primary); transform: scale(1.03); }
+    .stream-card .icon { font-size: 28px; margin-bottom: 10px; display: block; }
+    .stream-card .name { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+
+    /* Stats */
+    .stats-section { padding: 80px 24px; max-width: 1200px; margin: 0 auto; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .stat-item { text-align: center; padding: 32px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+    .stat-item .num { font-family: 'Space Grotesk', sans-serif; font-size: 48px; font-weight: 800; background: linear-gradient(135deg, var(--primary-light), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-item .desc { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+
+    .cta { padding: 80px 24px; max-width: 800px; margin: 0 auto; text-align: center; }
+    .cta-box { background: linear-gradient(135deg, rgba(108,43,217,0.2), rgba(0,194,255,0.1)); border: 1px solid rgba(108,43,217,0.3); border-radius: var(--radius-lg); padding: 60px 40px; position: relative; overflow: hidden; }
+    .cta-box::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(from 0deg, transparent 0deg, rgba(108,43,217,0.05) 45deg, transparent 90deg); animation: rotateBG 10s linear infinite; pointer-events: none; }
+    @keyframes rotateBG { to { transform: rotate(360deg); } }
+    .cta-box h2 { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; margin-bottom: 16px; position: relative; }
+    .cta-box p { color: var(--text-secondary); margin-bottom: 32px; font-size: 16px; position: relative; }
+    .cta-box .btn { position: relative; }
+
+    /* Navbar */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      background: rgba(10,14,26,0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s;
+    }
+    nav.scrolled { border-color: var(--border); }
+    .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; }
+    .nav-logo img { height: 36px; }
+    .nav-logo span { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a { color: var(--text-secondary); font-size: 14px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text-primary); }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--border); padding: 40px 24px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: var(--text-muted); font-size: 13px; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--text-primary); }
+
+    @media (max-width: 768px) {
+      .hero-content { grid-template-columns: 1fr; text-align: center; }
+      .hero-img { display: none; }
+      .hero-btns { justify-content: center; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .nav-links .hide-mobile { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <img src="assets/logo.png" alt="Infinity Coders Logo">
+        <span>Infinity Coders</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features" class="hide-mobile">Features</a>
+        <a href="#streams" class="hide-mobile">Courses</a>
+        <a href="login.html" class="btn btn-primary" id="loginBtn" style="padding:8px 20px;font-size:14px;">Login →</a>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="particles" id="particles"></div>
+    <div class="hero-content">
+      <div class="hero-text">
+        <div class="hero-badge typing">🚀 Smart Enquiry & Demo Scheduling System</div>
+        <h1>Manage Student<br><span class="animate-gradient">Enquiries Smarter</span><br>Not Harder.</h1>
+        <p>A centralized platform for Infinity Coders to capture, track, and convert student enquiries — with real-time analytics, follow-up scheduling, and automated notifications.</p>
+        <div class="hero-btns">
+          <a href="login.html" class="btn btn-primary">Get Started →</a>
+          <a href="#features" class="btn btn-secondary">Learn More</a>
+        </div>
+      </div>
+      <div class="hero-img">
+        <div class="hero-dashboard-mock">
+          <div class="mock-bar">
+            <div class="mock-dot" style="background:#EF4444"></div>
+            <div class="mock-dot" style="background:#F59E0B"></div>
+            <div class="mock-dot" style="background:#10B981"></div>
+            <span style="color:var(--text-muted);font-size:12px;margin-left:8px;">Infinity Coders Dashboard</span>
+          </div>
+          <div class="mock-stats">
+            <div class="mock-stat"><div class="val" style="color:#a78bfa">247</div><div class="lbl">Total Enquiries</div></div>
+            <div class="mock-stat"><div class="val" style="color:#10B981">68%</div><div class="lbl">Conversion Rate</div></div>
+            <div class="mock-stat"><div class="val" style="color:#F59E0B">12</div><div class="lbl">Demos Today</div></div>
+            <div class="mock-stat"><div class="val" style="color:#60A5FA">38</div><div class="lbl">Interested</div></div>
+          </div>
+          <div class="mock-chart">
+            <div class="mock-bar-item" style="height:40%;background:linear-gradient(to top,#6C2BD9,#8B5CF6)"></div>
+            <div class="mock-bar-item" style="height:65%;background:linear-gradient(to top,#6C2BD9,#8B5CF6)"></div>
+            <div class="mock-bar-item" style="height:55%;background:linear-gradient(to top,#6C2BD9,#8B5CF6)"></div>
+            <div class="mock-bar-item" style="height:80%;background:linear-gradient(to top,#6C2BD9,#8B5CF6)"></div>
+            <div class="mock-bar-item" style="height:70%;background:linear-gradient(to top,#6C2BD9,#8B5CF6)"></div>
+            <div class="mock-bar-item" style="height:90%;background:linear-gradient(to top,#00C2FF,#6C2BD9)"></div>
+            <div class="mock-bar-item" style="height:100%;background:linear-gradient(to top,#00C2FF,#6C2BD9)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="section-header">
+      <span class="section-tag">✦ Features</span>
+      <h2>Everything You Need to<br>Manage Enquiries</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon" style="background:rgba(108,43,217,0.15)">🔐</div>
+        <h3>Role-Based Access</h3>
+        <p>Separate Admin and Counselor dashboards with distinct permissions. Admins manage everything; counselors manage their own enquiries.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon" style="background:rgba(16,185,129,0.15)">📋</div>
+        <h3>Enquiry Management</h3>
+        <p>Add, edit, view and delete student enquiries. Track source, course interest, education qualification, and all contact details.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon" style="background:rgba(245,158,11,0.15)">📌</div>
+        <h3>Follow-up Tracking</h3>
+        <p>Add timestamped follow-up notes to every enquiry. Track student status from New → Contacted → Interested → Converted.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-4">
+        <div class="feature-icon" style="background:rgba(0,194,255,0.15)">📅</div>
+        <h3>Demo Scheduling</h3>
+        <p>Schedule demo sessions with counselors. Set date, time, and mode (Online/Offline). Students notified automatically via email.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-5">
+        <div class="feature-icon" style="background:rgba(239,68,68,0.15)">📊</div>
+        <h3>Analytics Dashboard</h3>
+        <p>Real-time charts for stream-wise enquiry counts, monthly trends, conversion rates, and status distribution. Data at a glance.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-6">
+        <div class="feature-icon" style="background:rgba(139,92,246,0.15)">🔍</div>
+        <h3>Search & Filter</h3>
+        <p>Instantly search by name or phone. Filter enquiries by status, stream, counselor, or date range. Never lose a lead again.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Streams -->
+  <section class="streams" id="streams">
+    <div class="streams-inner">
+      <div class="section-header">
+        <span class="section-tag">✦ Courses</span>
+        <h2>All Streams Supported</h2>
+      </div>
+      <div class="streams-grid">
+        <div class="stream-card"><span class="icon">🤖</span><div class="name">Data Science</div></div>
+        <div class="stream-card"><span class="icon">🌐</span><div class="name">Web Development</div></div>
+        <div class="stream-card"><span class="icon">🎨</span><div class="name">UI / UX Design</div></div>
+        <div class="stream-card"><span class="icon">🐍</span><div class="name">Python Full Stack</div></div>
+        <div class="stream-card"><span class="icon">☕</span><div class="name">Java Full Stack</div></div>
+        <div class="stream-card"><span class="icon">📱</span><div class="name">Digital Marketing</div></div>
+        <div class="stream-card"><span class="icon">🎬</span><div class="name">Video Editing</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-item reveal"><div class="num" id="s1">0</div><div class="desc">Enquiries Managed</div></div>
+      <div class="stat-item reveal reveal-delay-2"><div class="num" id="s2">0</div><div class="desc">Courses Supported</div></div>
+      <div class="stat-item reveal reveal-delay-3"><div class="num" id="s3">0</div><div class="desc">Demos Scheduled</div></div>
+      <div class="stat-item reveal reveal-delay-4"><div class="num" id="s4">0</div><div class="desc">% Avg Conversion</div></div>
+    </div>
+  </section>
+
+  <div class="cta reveal">
+    <div class="cta-box">
+      <h2>Ready to Transform Your<br>Enquiry Management?</h2>
+      <p>Join Infinity Coders' smart platform and never miss a lead again.</p>
+      <a href="login.html" class="btn btn-primary" style="font-size:16px;padding:14px 32px;">🚀 Login to Portal →</a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div class="nav-logo">
+        <img src="assets/logo.png" alt="Logo" style="height:28px">
+        <span style="font-size:16px;font-weight:700;">Infinity Coders</span>
+      </div>
+      <div class="footer-links">
+        <a href="login.html">Login</a>
+        <a href="#features">Features</a>
+        <a href="#streams">Courses</a>
+      </div>
+      <p style="color:var(--text-muted);font-size:13px;">© 2024 Infinity Coders. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Enhanced floating particles with varied shapes
+    const container = document.getElementById('particles');
+    const colors = ['#6C2BD9','#00C2FF','#10B981','#8B5CF6','#F59E0B'];
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 2 + Math.random() * 5;
+      p.style.cssText = `
+        left: ${Math.random() * 100}%;
+        animation-duration: ${6 + Math.random() * 14}s;
+        animation-delay: ${-Math.random() * 14}s;
+        background: ${colors[Math.floor(Math.random()*colors.length)]};
+        opacity: ${0.2 + Math.random() * 0.5};
+        width: ${size}px;
+        height: ${size}px;
+        border-radius: ${Math.random() > 0.7 ? '2px' : '50%'};
+        filter: blur(${Math.random() > 0.7 ? '1px' : '0px'});
+      `;
+      container.appendChild(p);
+    }
+
+    // Mouse parallax on hero
+    document.querySelector('.hero').addEventListener('mousemove', e => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 20;
+      const y = (e.clientY / window.innerHeight - 0.5) * 20;
+      document.querySelector('.hero-dashboard-mock').style.transform = `perspective(1000px) rotateY(${x * 0.3}deg) rotateX(${-y * 0.3}deg) translateY(${-12 * Math.sin(Date.now()/2000)}px)`;
+    });
+
+    // Counter animation with easing
+    function animateCounter(el, target, suffix = '') {
+      const startTime = performance.now();
+      const duration = 1800;
+      function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 4);
+        el.textContent = Math.round(target * ease) + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    // Scroll reveal
+    const revealAll = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => revealAll.observe(el));
+
+    // Stats counter
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          animateCounter(document.getElementById('s1'), 500, '+');
+          animateCounter(document.getElementById('s2'), 7, '');
+          animateCounter(document.getElementById('s3'), 120, '+');
+          animateCounter(document.getElementById('s4'), 68, '%');
+          statsObserver.disconnect();
+        }
+      });
+    });
+    statsObserver.observe(document.querySelector('.stats-section'));
+  </script>
+</body>
+</html>
+

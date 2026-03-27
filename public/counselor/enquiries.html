@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>My Enquiries – Infinity Coders</title>
+  <link rel="stylesheet" href="../assets/style.css">`n  <link rel="stylesheet" href="../assets/animations.css">
+  <link rel="stylesheet" href="../admin/admin.css">
+  <link rel="icon" href="../assets/logo.png" type="image/png">
+  <script src="../assets/utils.js"></script>`n  <script src="../assets/animate.js" defer></script>
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<!-- Follow-up Modal -->
+<div class="modal-overlay" id="followup-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Follow-up Notes</div>
+      <button class="modal-close" onclick="closeModal('followup-modal')">✕</button>
+    </div>
+    <div id="followup-list" style="margin-bottom:16px;max-height:280px;overflow-y:auto"></div>
+    <div class="form-group"><label class="form-label">Add Note</label><textarea class="form-control" id="new-note" rows="3" placeholder="What was discussed?"></textarea></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('followup-modal')">Close</button><button class="btn btn-primary" onclick="addNote()">Add Note</button></div>
+  </div>
+</div>
+
+<!-- Demo Modal -->
+<div class="modal-overlay" id="demo-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Schedule Demo</div><button class="modal-close" onclick="closeModal('demo-modal')">✕</button></div>
+    <input type="hidden" id="demo-enq-id">
+    <div class="form-group"><label class="form-label">Date *</label><input type="date" class="form-control" id="demo-date" required></div>
+    <div class="form-group"><label class="form-label">Time *</label><input type="time" class="form-control" id="demo-time" required></div>
+    <div class="form-group"><label class="form-label">Mode</label><select class="form-control" id="demo-mode"><option>Online</option><option>Offline</option></select></div>
+    <div class="form-group"><label class="form-label">Location / Link</label><input class="form-control" id="demo-location" placeholder="Meeting link or venue"></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('demo-modal')">Cancel</button><button class="btn btn-primary" onclick="scheduleDemo()">📅 Schedule</button></div>
+  </div>
+</div>
+
+<!-- Status update modal -->
+<div class="modal-overlay" id="status-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><div class="modal-title">Update Status</div><button class="modal-close" onclick="closeModal('status-modal')">✕</button></div>
+    <input type="hidden" id="status-enq-id">
+    <div class="form-group"><label class="form-label">New Status</label><select class="form-control" id="new-status"></select></div>
+    <div class="form-group"><label class="form-label">Quick Follow-up Note</label><textarea class="form-control" id="status-note" rows="2" placeholder="Optional note about this status change"></textarea></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('status-modal')">Cancel</button><button class="btn btn-primary" onclick="updateStatus()">Save Status</button></div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><img src="../assets/logo.png" alt="Logo"><span>Infinity Coders</span><span class="role-badge" style="background:rgba(16,185,129,0.2);color:#34D399">Counselor</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">My Panel</div>
+      <a href="index.html" class="nav-item"><span class="nav-icon">📊</span>My Dashboard</a>
+      <a href="enquiries.html" class="nav-item active"><span class="nav-icon">📋</span>My Enquiries</a>
+      <a href="demos.html" class="nav-item"><span class="nav-icon">📅</span>My Demos</a>
+    </nav>
+    <div class="sidebar-footer"><div class="user-card"><div class="user-avatar" id="sidebar-avatar" style="background:linear-gradient(135deg,#10B981,#34D399)">C</div><div class="user-info"><div class="name" id="sidebar-user-name">Counselor</div><div class="role" id="sidebar-user-role">Counselor</div></div><button class="logout-btn" onclick="logout()">⏻</button></div></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px"><button class="hamburger" id="hamburger">☰</button><div class="topbar-title">My Enquiries</div></div>
+      <div class="topbar-right"><div class="time-badge">🕐 <span id="clock"></span></div></div>
+    </div>
+    <div class="page-content">
+      <div class="filters-bar">
+        <div class="search-wrap"><span class="s-icon">🔍</span><input class="form-control" id="search-input" placeholder="Search student name or phone…" oninput="loadEnquiries()"></div>
+        <select class="form-control" id="filter-status" onchange="loadEnquiries()"><option value="">All Statuses</option></select>
+        <select class="form-control" id="filter-stream" onchange="loadEnquiries()"><option value="">All Streams</option></select>
+        <button class="btn btn-secondary btn-sm" onclick="clearFilters()">Clear</button>
+        <div style="margin-left:auto;font-size:13px;color:var(--text-muted)" id="count-label"></div>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Student</th><th>Contact</th><th>Stream</th><th>Source</th><th>Status</th><th>Follow-up</th><th>Actions</th></tr></thead>
+          <tbody id="table-body"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)"><span class="spinner"></span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const user = requireAuth('counselor');
+if (user) initSidebar('counselor');
+let currentFolEnq = null;
+
+// Init filter dropdowns
+STATUSES.forEach(s => {
+  const o = document.createElement('option'); o.value=s; o.textContent=s;
+  document.getElementById('filter-status').appendChild(o);
+});
+STREAMS.forEach(s => {
+  const o = document.createElement('option'); o.value=s; o.textContent=s;
+  document.getElementById('filter-stream').appendChild(o);
+});
+STATUSES.forEach(s => {
+  const o = document.createElement('option'); o.value=s; o.textContent=s;
+  document.getElementById('new-status').appendChild(o);
+});
+
+async function loadEnquiries() {
+  const search = document.getElementById('search-input').value;
+  const status = document.getElementById('filter-status').value;
+  const stream = document.getElementById('filter-stream').value;
+  const res = await apiFetch(`/api/enquiries?search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}&stream=${encodeURIComponent(stream)}`);
+  if (!res || !res.ok) return;
+  const data = await res.json();
+  document.getElementById('count-label').textContent = `${data.length} record${data.length!==1?'s':''}`;
+  const tbody = document.getElementById('table-body');
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">🔍</div><h3>No enquiries found</h3></div></td></tr>'; return; }
+  tbody.innerHTML = data.map(e => `
+    <tr>
+      <td style="color:var(--text-muted);font-size:12px">#${e.id}</td>
+      <td><div style="font-weight:600">${e.student_name}</div><div style="font-size:12px;color:var(--text-muted)">${e.email||''}</div></td>
+      <td>${e.contact}</td>
+      <td style="font-size:13px">${e.stream}</td>
+      <td style="font-size:13px;color:var(--text-muted)">${e.source}</td>
+      <td>${statusBadge(e.status)}</td>
+      <td style="font-size:13px">${e.followup_date?fmtDate(e.followup_date):'<span style="color:var(--text-muted)">—</span>'}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm btn-icon" title="Update Status" onclick="openStatusModal(${e.id},'${e.status}')">🔄</button>
+          <button class="btn btn-secondary btn-sm btn-icon" title="Follow-ups" onclick="openFollowups(${e.id})">📌</button>
+          <button class="btn btn-secondary btn-sm btn-icon" title="Schedule Demo" onclick="openDemoModal(${e.id})">📅</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function clearFilters() {
+  document.getElementById('search-input').value='';
+  document.getElementById('filter-status').value='';
+  document.getElementById('filter-stream').value='';
+  loadEnquiries();
+}
+
+function openStatusModal(id, current) {
+  document.getElementById('status-enq-id').value = id;
+  document.getElementById('new-status').value = current;
+  document.getElementById('status-note').value = '';
+  openModal('status-modal');
+}
+
+async function updateStatus() {
+  const id = document.getElementById('status-enq-id').value;
+  const status = document.getElementById('new-status').value;
+  const note = document.getElementById('status-note').value.trim();
+  const res = await apiFetch('/api/enquiries/' + id, { method: 'PUT', body: JSON.stringify({ status }) });
+  if (res && res.ok) {
+    if (note) await apiFetch('/api/followups', { method: 'POST', body: JSON.stringify({ enquiry_id: id, note: `[Status → ${status}] ${note}` }) });
+    closeModal('status-modal'); showToast('Status updated!', 'success'); loadEnquiries();
+  } else showToast('Failed to update', 'error');
+}
+
+async function openFollowups(id) {
+  currentFolEnq = id;
+  document.getElementById('new-note').value = '';
+  openModal('followup-modal');
+  await loadFollowups(id);
+}
+
+async function loadFollowups(id) {
+  const res = await apiFetch('/api/followups/' + id);
+  const list = document.getElementById('followup-list');
+  if (!res || !res.ok) { list.innerHTML = '<p style="color:var(--text-muted)">No notes yet.</p>'; return; }
+  const notes = await res.json();
+  list.innerHTML = notes.length ? notes.map(n => `
+    <div style="padding:10px;background:var(--bg-card2);border-radius:8px;margin-bottom:8px">
+      <div style="font-size:13px">${n.note}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${n.counselor_name} · ${fmtDateTime(n.created_at)}</div>
+    </div>
+  `).join('') : '<p style="color:var(--text-muted);font-size:13px">No follow-up notes yet.</p>';
+}
+
+async function addNote() {
+  const note = document.getElementById('new-note').value.trim();
+  if (!note) { showToast('Enter a note first', 'warning'); return; }
+  const res = await apiFetch('/api/followups', { method: 'POST', body: JSON.stringify({ enquiry_id: currentFolEnq, note }) });
+  if (res && res.ok) { document.getElementById('new-note').value=''; showToast('Note added!','success'); loadFollowups(currentFolEnq); }
+  else showToast('Failed', 'error');
+}
+
+function openDemoModal(id) {
+  document.getElementById('demo-enq-id').value = id;
+  document.getElementById('demo-date').valueAsDate = new Date();
+  openModal('demo-modal');
+}
+
+async function scheduleDemo() {
+  const payload = {
+    enquiry_id: document.getElementById('demo-enq-id').value,
+    demo_date: document.getElementById('demo-date').value,
+    demo_time: document.getElementById('demo-time').value,
+    mode: document.getElementById('demo-mode').value,
+    location: document.getElementById('demo-location').value
+  };
+  if (!payload.demo_date || !payload.demo_time) { showToast('Date and time required', 'warning'); return; }
+  const res = await apiFetch('/api/demos', { method: 'POST', body: JSON.stringify(payload) });
+  if (res && res.ok) { closeModal('demo-modal'); showToast('Demo scheduled!','success'); }
+  else showToast('Failed to schedule','error');
+}
+
+loadEnquiries();
+</script>
+</body>
+</html>

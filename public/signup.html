@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Sign Up – Infinity Coders</title>
+  <meta name="description" content="Create your Infinity Coders account and start managing student enquiries efficiently.">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/animations.css">
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <style>
+    * { box-sizing: border-box; }
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-dark); position: relative; overflow-x: hidden; }
+
+    /* Animated background */
+    .bg-glow {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 60vw 60vh at 10% 20%, rgba(108,43,217,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50vw 50vh at 90% 80%, rgba(0,194,255,0.08) 0%, transparent 70%);
+    }
+    .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .particle { position: absolute; border-radius: 50%; animation: drift linear infinite; }
+    @keyframes drift { 0% { transform: translateY(100vh) scale(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(-80px) scale(1); opacity: 0; } }
+
+    /* Signup card */
+    .signup-wrap {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 520px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+    .signup-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(108,43,217,0.1);
+      animation: cardPopIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes cardPopIn {
+      from { opacity:0; transform:scale(0.88) translateY(24px); }
+      to { opacity:1; transform:scale(1) translateY(0); }
+    }
+
+    /* Logo / header */
+    .signup-logo {
+      text-align: center; margin-bottom: 32px;
+    }
+    .signup-logo img { height: 52px; margin-bottom: 12px; filter: drop-shadow(0 0 16px rgba(108,43,217,0.4)); }
+    .signup-logo h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+    .signup-logo .sub { font-size: 14px; color: var(--text-muted); }
+
+    /* Progress steps */
+    .step-indicator {
+      display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 32px;
+    }
+    .step { display: flex; align-items: center; }
+    .step-dot {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--bg-dark); border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: var(--text-muted);
+      transition: all 0.3s ease;
+      position: relative; z-index: 1;
+    }
+    .step-dot.active { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 0 0 4px rgba(108,43,217,0.2); }
+    .step-dot.done { background: var(--success); border-color: var(--success); color: white; }
+    .step-line { flex: 1; height: 2px; background: var(--border); min-width: 40px; transition: background 0.3s; }
+    .step-line.done { background: var(--success); }
+
+    /* Form inputs with floating labels */
+    .field-group { position: relative; margin-bottom: 20px; }
+    .field-group .form-control {
+      padding-top: 22px; padding-bottom: 10px;
+      padding-left: 44px; padding-right: 16px;
+      background: var(--bg-dark);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      color: var(--text-primary);
+      width: 100%;
+      transition: all 0.2s;
+      outline: none;
+      height: 58px;
+    }
+    .field-group .form-control:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(108,43,217,0.15);
+      background: var(--bg-card);
+    }
+    .field-group .form-control.error-field { border-color: var(--danger) !important; }
+    .field-group label {
+      position: absolute;
+      left: 44px; top: 18px;
+      font-size: 14px; color: var(--text-muted);
+      pointer-events: none;
+      transition: all 0.2s;
+    }
+    .field-group .form-control:focus ~ label,
+    .field-group .form-control:not(:placeholder-shown) ~ label {
+      top: 8px; font-size: 10px; font-weight: 600; color: var(--primary-light); letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .field-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      font-size: 17px; color: var(--text-muted); pointer-events: none; transition: color 0.2s;
+    }
+    .field-group:focus-within .field-icon { color: var(--primary-light); }
+    .toggle-pw {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      font-size: 16px; cursor: pointer; color: var(--text-muted); transition: color 0.2s;
+      background: none; border: none;
+    }
+    .toggle-pw:hover { color: var(--text-primary); }
+    .field-error { font-size: 11px; color: var(--danger); margin-top: 5px; padding-left: 4px; display: none; animation: shake 0.3s ease; }
+    @keyframes shake { 0%,100% { transform:translateX(0); } 25% { transform:translateX(-4px); } 75% { transform:translateX(4px); } }
+    .field-error.show { display: block; }
+
+    /* Password strength bar */
+    .pw-strength { margin-top: 8px; }
+    .pw-strength-bar { height: 4px; border-radius: 99px; background: var(--bg-dark); overflow: hidden; margin-bottom: 4px; }
+    .pw-strength-fill { height: 100%; border-radius: 99px; width: 0%; transition: width 0.4s, background 0.4s; }
+    .pw-strength-label { font-size: 11px; color: var(--text-muted); }
+
+    /* Terms */
+    .terms-row { display:flex; align-items:flex-start; gap:10px; margin-bottom:24px; }
+    .terms-row input[type=checkbox] { width:16px; height:16px; accent-color: var(--primary); flex-shrink:0; margin-top:2px; cursor:pointer; }
+    .terms-row label { font-size:13px; color:var(--text-secondary); cursor:pointer; }
+    .terms-row a { color: var(--primary-light); }
+
+    /* Submit */
+    .btn-signup {
+      width: 100%; padding: 16px; font-size: 16px; font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white; border: none; border-radius: 12px; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 24px rgba(108,43,217,0.3);
+    }
+    .btn-signup:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(108,43,217,0.45); }
+    .btn-signup:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .btn-signup .ripple-wave { background: rgba(255,255,255,0.2); }
+
+    /* Success / email-pending state */
+    .success-screen {
+      display: none; text-align: center; padding: 20px 0;
+      animation: cardPopIn 0.5s ease both;
+    }
+    .success-icon {
+      width: 80px; height: 80px; border-radius: 50%; background: rgba(108,43,217,0.12);
+      border: 2px solid var(--primary-light); display: flex; align-items: center;
+      justify-content: center; font-size: 36px; margin: 0 auto 20px;
+      animation: successPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes successPop { from { transform:scale(0);opacity:0; } to { transform:scale(1);opacity:1; } }
+    .success-screen h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .success-screen p { color: var(--text-muted); font-size: 14px; margin-bottom: 16px; }
+    .email-badge {
+      display: inline-block; padding: 8px 18px;
+      background: rgba(108,43,217,0.1); border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 99px; color: var(--primary-light); font-size: 14px; font-weight: 600;
+      margin-bottom: 20px; word-break: break-all;
+    }
+    .verify-steps {
+      text-align: left; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 20px; margin-bottom: 24px;
+    }
+    .verify-steps p { margin: 0 0 8px; font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .verify-steps ol { margin: 0; padding-left: 18px; }
+    .verify-steps li { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; line-height: 1.5; }
+    .btn-resend {
+      width: 100%; padding: 13px; font-size: 14px; font-weight: 600;
+      background: transparent; border: 1.5px solid var(--primary-light);
+      color: var(--primary-light); border-radius: 12px; cursor: pointer;
+      transition: all 0.25s; margin-bottom: 12px;
+    }
+    .btn-resend:hover:not(:disabled) { background: rgba(108,43,217,0.15); }
+    .btn-resend:disabled { opacity: 0.5; cursor: not-allowed; }
+    .resend-msg { font-size: 12px; color: var(--success); margin-top: 6px; display: none; }
+    .resend-msg.show { display: block; }
+
+    /* Social proof */
+    .social-proof {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 28px; justify-content: center;
+    }
+    .avatars { display: flex; }
+    .avatars span { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--bg-card); background: linear-gradient(135deg, var(--primary), var(--primary-light)); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; margin-right: -8px; color: white; }
+    .social-text { font-size: 12px; color: var(--text-muted); padding-left: 16px; }
+    .social-text strong { color: var(--text-primary); }
+
+    @media (max-width: 480px) {
+      .signup-card { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="particles" id="particles"></div>
+
+<div class="signup-wrap">
+  <div class="signup-card">
+    <!-- Logo -->
+    <div class="signup-logo">
+      <img src="assets/logo.png" alt="Infinity Coders Logo">
+      <h1>Create your account</h1>
+      <div class="sub">Join Infinity Coders as a Counselor</div>
+    </div>
+
+    <!-- Social proof -->
+    <div class="social-proof">
+      <div class="avatars">
+        <span>P</span><span>A</span><span>R</span><span>M</span>
+      </div>
+      <div class="social-text">Join <strong>10+ counselors</strong> already using the portal</div>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="step-indicator" id="step-indicator">
+      <div class="step"><div class="step-dot active" id="dot-1">1</div></div>
+      <div class="step-line" id="line-1"></div>
+      <div class="step"><div class="step-dot" id="dot-2">2</div></div>
+      <div class="step-line" id="line-2"></div>
+      <div class="step"><div class="step-dot" id="dot-3">✓</div></div>
+    </div>
+
+    <!-- Success screen: email verification pending (hidden initially) -->
+    <div class="success-screen" id="success-screen">
+      <div class="success-icon">📧</div>
+      <h2>Check your inbox!</h2>
+      <p>We've sent a verification link to:</p>
+      <div class="email-badge" id="success-email"></div>
+      <div class="verify-steps">
+        <p>Next steps</p>
+        <ol>
+          <li>Open the email from <strong>Infinity Coders</strong></li>
+          <li>Click the <strong>"Verify My Email"</strong> button</li>
+          <li>Come back and <a href="login.html" style="color:var(--primary-light)">log in</a></li>
+        </ol>
+      </div>
+      <button class="btn-resend" id="btn-resend" onclick="resendVerification()">🔄 Resend Verification Email</button>
+      <div class="resend-msg" id="resend-msg"></div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
+        Didn't receive it? Check your spam folder or resend above.
+      </p>
+    </div>
+
+    <!-- Sign-up form -->
+    <form id="signup-form">
+
+      <!-- Step 1: Personal Info -->
+      <div id="step-1-fields">
+        <div class="field-group">
+          <span class="field-icon">👤</span>
+          <input class="form-control" type="text" id="f-name" placeholder=" " autocomplete="name">
+          <label for="f-name">Full Name</label>
+          <div class="field-error" id="err-name"></div>
+        </div>
+        <div class="field-group">
+          <span class="field-icon">📞</span>
+          <input class="form-control" type="tel" id="f-phone" placeholder=" " autocomplete="tel">
+          <label for="f-phone">Phone Number</label>
+        </div>
+        <button type="button" class="btn-signup ripple-btn" onclick="nextStep(1)">Continue →</button>
+      </div>
+
+      <!-- Step 2: Account Details -->
+      <div id="step-2-fields" style="display:none">
+        <div class="field-group">
+          <span class="field-icon">📧</span>
+          <input class="form-control" type="email" id="f-email" placeholder=" " autocomplete="email">
+          <label for="f-email">Email Address</label>
+          <div class="field-error" id="err-email"></div>
+        </div>
+        <div class="field-group">
+          <span class="field-icon">🔒</span>
+          <input class="form-control" type="password" id="f-password" placeholder=" " autocomplete="new-password" oninput="updateStrength()">
+          <label for="f-password">Password</label>
+          <button type="button" class="toggle-pw" onclick="togglePw('f-password', this)">👁️</button>
+          <div class="field-error" id="err-password"></div>
+          <div class="pw-strength" id="pw-strength" style="display:none">
+            <div class="pw-strength-bar"><div class="pw-strength-fill" id="pw-fill"></div></div>
+            <div class="pw-strength-label" id="pw-label"></div>
+          </div>
+        </div>
+        <div class="field-group">
+          <span class="field-icon">🔒</span>
+          <input class="form-control" type="password" id="f-confirm" placeholder=" " autocomplete="new-password">
+          <label for="f-confirm">Confirm Password</label>
+          <button type="button" class="toggle-pw" onclick="togglePw('f-confirm', this)">👁️</button>
+          <div class="field-error" id="err-confirm"></div>
+        </div>
+        <div class="terms-row">
+          <input type="checkbox" id="f-terms">
+          <label for="f-terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a> of Infinity Coders</label>
+        </div>
+        <div class="field-error" id="err-terms" style="margin-top:-12px;margin-bottom:16px"></div>
+        <button type="submit" class="btn-signup ripple-btn" id="submit-btn">🚀 Create Account</button>
+        <button type="button" class="btn btn-secondary" style="width:100%;margin-top:10px;border-radius:12px;padding:12px" onclick="goStep(1)">← Back</button>
+      </div>
+
+    </form>
+
+    <div class="login-link">Already have an account? <a href="login.html">Login instead →</a></div>
+  </div>
+</div>
+
+<script>
+// Particles
+const pc = document.getElementById('particles');
+['#6C2BD9','#00C2FF','#10B981','#8B5CF6'].forEach((color, i) => {
+  for (let j = 0; j < 6; j++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 2 + Math.random() * 4;
+    p.style.cssText = `left:${Math.random()*100}%;width:${size}px;height:${size}px;background:${color};opacity:${0.15+Math.random()*0.3};animation-duration:${8+Math.random()*12}s;animation-delay:${-Math.random()*12}s;filter:blur(${Math.random()>0.7?'1px':'0px'})`;
+    pc.appendChild(p);
+  }
+});
+
+let currentStep = 1;
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+  const input = el.previousElementSibling;
+  if (input && input.classList.contains('form-control')) input.classList.add('error-field');
+}
+function clearError(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('show');
+  const input = el.previousElementSibling;
+  if (input && input.classList.contains('form-control')) input.classList.remove('error-field');
+}
+
+function goStep(n) {
+  document.getElementById(`step-${currentStep}-fields`).style.display = 'none';
+  currentStep = n;
+  document.getElementById(`step-${n}-fields`).style.display = 'block';
+  updateStepDots();
+}
+
+function updateStepDots() {
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    const line = document.getElementById(`line-${i}`);
+    if (i < currentStep) { dot.classList.add('done'); dot.classList.remove('active'); dot.textContent = '✓'; }
+    else if (i === currentStep) { dot.classList.add('active'); dot.classList.remove('done'); dot.textContent = i; }
+    else { dot.classList.remove('active','done'); dot.textContent = i; }
+    if (line && i < currentStep) line.classList.add('done');
+    else if (line) line.classList.remove('done');
+  }
+}
+
+function nextStep(from) {
+  if (from === 1) {
+    const name = document.getElementById('f-name').value.trim();
+    clearError('err-name');
+    if (name.length < 2) { showError('err-name', 'Please enter your full name (at least 2 characters)'); return; }
+    goStep(2);
+    setTimeout(() => document.getElementById('f-email').focus(), 100);
+  }
+}
+
+function togglePw(id, btn) {
+  const input = document.getElementById(id);
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁️' : '🙈';
+}
+
+function updateStrength() {
+  const pw = document.getElementById('f-password').value;
+  const wrap = document.getElementById('pw-strength');
+  const fill = document.getElementById('pw-fill');
+  const label = document.getElementById('pw-label');
+  if (!pw) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  let score = 0;
+  if (pw.length >= 6) score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [
+    { pct: 20, color: '#EF4444', text: '⚠️ Too weak' },
+    { pct: 40, color: '#F97316', text: '⚡ Weak' },
+    { pct: 60, color: '#F59E0B', text: '🔶 Fair' },
+    { pct: 80, color: '#10B981', text: '✅ Strong' },
+    { pct: 100, color: '#06B6D4', text: '🛡️ Very strong' },
+  ];
+  const lvl = levels[Math.min(score, 4)];
+  fill.style.width = lvl.pct + '%';
+  fill.style.background = lvl.color;
+  label.textContent = lvl.text;
+  label.style.color = lvl.color;
+}
+
+// Ripple
+document.querySelectorAll('.ripple-btn').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const wave = document.createElement('span');
+    wave.className = 'ripple-wave';
+    wave.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+    btn.appendChild(wave);
+    wave.addEventListener('animationend', () => wave.remove());
+  });
+});
+
+// Field validation on blur
+document.getElementById('f-email').addEventListener('blur', () => {
+  const v = document.getElementById('f-email').value;
+  if (v && !/^[^@]+@[^@]+\.[^@]+$/.test(v)) showError('err-email','Please enter a valid email address');
+  else clearError('err-email');
+});
+document.getElementById('f-confirm').addEventListener('blur', () => {
+  const pw = document.getElementById('f-password').value;
+  const confirm = document.getElementById('f-confirm').value;
+  if (confirm && pw !== confirm) showError('err-confirm','Passwords do not match');
+  else clearError('err-confirm');
+});
+
+// Submit
+document.getElementById('signup-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const name = document.getElementById('f-name').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const password = document.getElementById('f-password').value;
+  const confirm = document.getElementById('f-confirm').value;
+  const terms = document.getElementById('f-terms').checked;
+
+  // Validate step 2
+  let hasError = false;
+  ['err-email','err-password','err-confirm','err-terms'].forEach(clearError);
+
+  if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { showError('err-email','Please enter a valid email address'); hasError = true; }
+  if (!password || password.length < 6) { showError('err-password','Password must be at least 6 characters'); hasError = true; }
+  else if (password !== confirm) { showError('err-confirm','Passwords do not match'); hasError = true; }
+  if (!terms) { showError('err-terms','Please accept the Terms of Service to continue'); hasError = true; }
+  if (hasError) return;
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Creating account…';
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, phone })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      btn.disabled = false;
+      btn.textContent = '🚀 Create Account';
+      if (data.fields) {
+        Object.entries(data.fields).forEach(([field, msg]) => {
+          if (document.getElementById(`err-${field}`)) showError(`err-${field}`, msg);
+        });
+        if (data.fields.email) goStep(2);
+      } else {
+        showError('err-email', data.error || 'Registration failed. Please try again.');
+      }
+      return;
+    }
+
+    // Registration created — now pending email verification
+    window._pendingEmail = data.email || email;
+
+    // Update step indicator to show step 3 complete
+    document.getElementById('dot-3').classList.add('done');
+    document.getElementById('line-2').classList.add('done');
+    document.getElementById('dot-2').classList.remove('active');
+    document.getElementById('dot-2').classList.add('done');
+    document.getElementById('dot-2').textContent = '✓';
+
+    // Show email-pending success screen
+    document.getElementById('step-2-fields').style.display = 'none';
+    document.getElementById('success-email').textContent = window._pendingEmail;
+    document.getElementById('success-screen').style.display = 'block';
+
+  } catch(err) {
+    btn.disabled = false;
+    btn.textContent = '🚀 Create Account';
+    showError('err-email', 'Network error. Please check your connection.');
+  }
+});
+
+// ── Resend verification ──────────────────────────────────────────
+async function resendVerification() {
+  const btn = document.getElementById('btn-resend');
+  const msg = document.getElementById('resend-msg');
+  const targetEmail = window._pendingEmail || '';
+  if (!targetEmail) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending…';
+  msg.className = 'resend-msg';
+
+  try {
+    const res = await fetch('/api/auth/resend-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: targetEmail })
+    });
+    const data = await res.json();
+    if (res.status === 429) {
+      // Rate limited
+      msg.textContent = data.error || 'Please wait before resending.';
+      msg.style.color = 'var(--danger)';
+      msg.classList.add('show');
+      const secs = data.cooldown || 180;
+      let remaining = secs;
+      const interval = setInterval(() => {
+        remaining--;
+        btn.textContent = `⏳ Resend again in ${remaining}s`;
+        if (remaining <= 0) {
+          clearInterval(interval);
+          btn.disabled = false;
+          btn.textContent = '🔄 Resend Verification Email';
+          msg.classList.remove('show');
+        }
+      }, 1000);
+    } else {
+      msg.textContent = '✅ ' + (data.message || 'Email sent! Check your inbox.');
+      msg.style.color = 'var(--success)';
+      msg.classList.add('show');
+      // Cooldown 3 min
+      let remaining = 180;
+      const interval = setInterval(() => {
+        remaining--;
+        btn.textContent = `⏳ Resend again in ${remaining}s`;
+        if (remaining <= 0) {
+          clearInterval(interval);
+          btn.disabled = false;
+          btn.textContent = '🔄 Resend Verification Email';
+        }
+      }, 1000);
+    }
+  } catch (err) {
+    msg.textContent = 'Network error. Please try again.';
+    msg.style.color = 'var(--danger)';
+    msg.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = '🔄 Resend Verification Email';
+  }
+}
+</script>
+</body>
+</html>

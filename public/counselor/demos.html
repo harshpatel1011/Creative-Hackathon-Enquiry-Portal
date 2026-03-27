@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>My Demos – Infinity Coders</title>
+  <link rel="stylesheet" href="../assets/style.css">`n  <link rel="stylesheet" href="../assets/animations.css">
+  <link rel="stylesheet" href="../admin/admin.css">
+  <link rel="icon" href="../assets/logo.png" type="image/png">
+  <script src="../assets/utils.js"></script>`n  <script src="../assets/animate.js" defer></script>
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><img src="../assets/logo.png" alt="Logo"><span>Infinity Coders</span><span class="role-badge" style="background:rgba(16,185,129,0.2);color:#34D399">Counselor</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">My Panel</div>
+      <a href="index.html" class="nav-item"><span class="nav-icon">📊</span>My Dashboard</a>
+      <a href="enquiries.html" class="nav-item"><span class="nav-icon">📋</span>My Enquiries</a>
+      <a href="demos.html" class="nav-item active"><span class="nav-icon">📅</span>My Demos</a>
+    </nav>
+    <div class="sidebar-footer"><div class="user-card"><div class="user-avatar" id="sidebar-avatar" style="background:linear-gradient(135deg,#10B981,#34D399)">C</div><div class="user-info"><div class="name" id="sidebar-user-name">Counselor</div><div class="role" id="sidebar-user-role">Counselor</div></div><button class="logout-btn" onclick="logout()">⏻</button></div></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px"><button class="hamburger" id="hamburger">☰</button><div class="topbar-title">My Demos</div></div>
+      <div class="topbar-right">
+        <div class="time-badge">🕐 <span id="clock"></span></div>
+        <select class="form-control" style="width:160px" id="filter-status" onchange="loadDemos()">
+          <option value="">All</option><option value="Scheduled">Scheduled</option>
+          <option value="Completed">Completed</option><option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+    <div class="page-content">
+      <!-- Today's demos -->
+      <div style="margin-bottom:24px">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;color:var(--text-secondary)">📅 Today's Schedule</h3>
+        <div id="today-demos" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px"></div>
+      </div>
+      <!-- All demos table -->
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:16px">All My Demos</div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Student</th><th>Stream</th><th>Date & Time</th><th>Mode</th><th>Status</th><th>Notified</th><th>Actions</th></tr></thead>
+            <tbody id="demos-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const user = requireAuth('counselor');
+if (user) initSidebar('counselor');
+
+async function loadDemos() {
+  const status = document.getElementById('filter-status').value;
+  const res = await apiFetch('/api/demos?status=' + encodeURIComponent(status));
+  if (!res || !res.ok) return;
+  const demos = await res.json();
+  const today = new Date().toISOString().slice(0,10);
+  const todayEl = document.getElementById('today-demos');
+  const todayDemos = demos.filter(d => d.demo_date === today);
+
+  todayEl.innerHTML = todayDemos.length ? todayDemos.map(d => `
+    <div class="card" style="border-left:3px solid #10B981">
+      <div style="font-size:15px;font-weight:700">${d.student_name}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin:4px 0">${d.stream}</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-top:8px">⏰ ${d.demo_time} &nbsp;|&nbsp; 📍 ${d.mode}</div>
+      ${d.location ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px">${d.location}</div>` : ''}
+      <div style="margin-top:12px">${demoBadge(d.status)}</div>
+    </div>
+  `).join('') : '<div style="padding:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-size:14px">No demos scheduled for today 🎉</div>';
+
+  const tbody = document.getElementById('demos-body');
+  if (!demos.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">📅</div><h3>No demos yet</h3></div></td></tr>'; return; }
+  tbody.innerHTML = demos.map(d => `
+    <tr>
+      <td><div style="font-weight:600">${d.student_name}</div><div style="font-size:12px;color:var(--text-muted)">${d.contact}</div></td>
+      <td style="font-size:13px">${d.stream}</td>
+      <td><div style="font-weight:500">${fmtDate(d.demo_date)}</div><div style="font-size:12px;color:var(--text-muted)">⏰ ${d.demo_time}</div></td>
+      <td style="font-size:13px">${d.mode}</td>
+      <td>${demoBadge(d.status)}</td>
+      <td>${d.notified ? '<span style="color:#34D399;font-size:13px">✅</span>' : '<span style="color:var(--text-muted);font-size:13px">⏳</span>'}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-success btn-sm" onclick="mark(${d.id},'Completed')">✅ Done</button>
+          <button class="btn btn-danger btn-sm" onclick="mark(${d.id},'Cancelled')">✕ Cancel</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function mark(id, status) {
+  const res = await apiFetch('/api/demos/' + id, { method: 'PUT', body: JSON.stringify({ status }) });
+  if (res && res.ok) { showToast('Demo marked as ' + status, 'success'); loadDemos(); }
+  else showToast('Failed', 'error');
+}
+
+loadDemos();
+</script>
+</body>
+</html>

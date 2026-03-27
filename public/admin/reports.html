@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Reports – Admin | Infinity Coders</title>
+  <link rel="stylesheet" href="../assets/style.css">`n  <link rel="stylesheet" href="../assets/animations.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="icon" href="../assets/logo.png" type="image/png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="../assets/utils.js"></script>`n  <script src="../assets/animate.js" defer></script>
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><img src="../assets/logo.png" alt="Logo"><span>Infinity Coders</span><span class="role-badge">Admin</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <a href="index.html" class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="enquiries.html" class="nav-item"><span class="nav-icon">📋</span>Enquiries</a>
+      <a href="demos.html" class="nav-item"><span class="nav-icon">📅</span>Demo Schedule</a>
+      <div class="nav-section-label">Management</div>
+      <a href="counselors.html" class="nav-item"><span class="nav-icon">👥</span>Counselors</a>
+      <a href="reports.html" class="nav-item active"><span class="nav-icon">📈</span>Reports & Export</a>
+    </nav>
+    <div class="sidebar-footer"><div class="user-card"><div class="user-avatar" id="sidebar-avatar">A</div><div class="user-info"><div class="name" id="sidebar-user-name">Admin</div><div class="role" id="sidebar-user-role">Administrator</div></div><button class="logout-btn" onclick="logout()">⏻</button></div></div>
+  </aside>
+  <main class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px"><button class="hamburger" id="hamburger">☰</button><div class="topbar-title">Reports & Export</div></div>
+      <div class="topbar-right"><div class="time-badge">🕐 <span id="clock"></span></div><button class="btn btn-success" onclick="exportCSV()">⬇️ Export CSV</button></div>
+    </div>
+    <div class="page-content">
+      <!-- Summary cards -->
+      <div class="stats-row" id="sum-row"></div>
+      <!-- Charts -->
+      <div class="charts-row" style="margin-top:24px">
+        <div class="chart-card">
+          <div class="chart-title">Conversion Funnel</div>
+          <div class="chart-sub">Status distribution of all enquiries</div>
+          <canvas id="funnelChart" height="250"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Stream Performance</div>
+          <div class="chart-sub">Enquiries per course/stream</div>
+          <canvas id="streamChart2" height="250"></canvas>
+        </div>
+      </div>
+      <!-- Monthly table -->
+      <div class="chart-card" style="margin-top:20px">
+        <div class="chart-title" style="margin-bottom:16px">Monthly Enquiry Report</div>
+        <div class="table-wrapper">
+          <table class="data-table" id="monthly-table">
+            <thead><tr><th>Month</th><th>Total Enquiries</th><th>Converted</th><th>Conversion Rate</th></tr></thead>
+            <tbody id="monthly-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+const user = requireAuth('admin');
+if (user) initSidebar('admin');
+
+async function loadReports() {
+  const [sumRes, streamRes, statusRes, monthRes] = await Promise.all([
+    apiFetch('/api/analytics/summary'),
+    apiFetch('/api/analytics/stream-wise'),
+    apiFetch('/api/analytics/status-wise'),
+    apiFetch('/api/analytics/monthly')
+  ]);
+  const sum = await sumRes.json();
+  document.getElementById('sum-row').innerHTML = `
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(108,43,217,0.15)">📋</div><div class="stat-info"><div class="value">${sum.total}</div><div class="label">Total Enquiries</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(16,185,129,0.15)">✅</div><div class="stat-info"><div class="value">${sum.converted}</div><div class="label">Converted</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(245,158,11,0.15)">📈</div><div class="stat-info"><div class="value">${sum.conversion_rate}%</div><div class="label">Conversion Rate</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,0.15)">🔴</div><div class="stat-info"><div class="value">${sum.not_interested}</div><div class="label">Not Interested</div></div></div>
+  `;
+
+  const statusData = await statusRes.json();
+  const statusColors = { 'New': '#818CF8', 'Contacted': '#60A5FA', 'Interested': '#FCD34D', 'Not Interested': '#F87171', 'Converted': '#34D399' };
+  new Chart(document.getElementById('funnelChart'), {
+    type: 'bar',
+    data: {
+      labels: statusData.map(d => d.status),
+      datasets: [{ label: 'Count', data: statusData.map(d => d.count), backgroundColor: statusData.map(d => statusColors[d.status]), borderRadius: 8, borderSkipped: false }]
+    },
+    options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+
+  const streamData = await streamRes.json();
+  new Chart(document.getElementById('streamChart2'), {
+    type: 'polarArea',
+    data: {
+      labels: streamData.map(d => d.stream),
+      datasets: [{ data: streamData.map(d => d.count), backgroundColor: ['rgba(108,43,217,0.7)','rgba(0,194,255,0.7)','rgba(16,185,129,0.7)','rgba(245,158,11,0.7)','rgba(239,68,68,0.7)','rgba(139,92,246,0.7)','rgba(236,72,153,0.7)'], borderWidth: 0 }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'right', labels: { color: '#94A3B8', font: { size: 11 } } } }, scales: { r: { ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.08)' } } } }
+  });
+
+  const monthData = await monthRes.json();
+  const tbody = document.getElementById('monthly-body');
+  tbody.innerHTML = monthData.map(m => {
+    const rate = m.count > 0 ? ((m.converted / m.count) * 100).toFixed(1) : '0.0';
+    return `<tr>
+      <td style="font-weight:600">${m.month}</td>
+      <td>${m.count}</td>
+      <td style="color:#34D399">${m.converted}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:6px;background:var(--bg-dark);border-radius:3px;overflow:hidden">
+            <div style="width:${rate}%;height:100%;background:linear-gradient(90deg,#6C2BD9,#10B981);border-radius:3px"></div>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:#34D399">${rate}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function exportCSV() {
+  const token = getToken();
+  const a = document.createElement('a');
+  a.href = '/api/enquiries/export/csv';
+  a.download = 'enquiries_' + new Date().toISOString().slice(0,10) + '.csv';
+  // Fetch with auth header
+  const res = await apiFetch('/api/enquiries/export/csv');
+  if (!res || !res.ok) { showToast('Export failed', 'error'); return; }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSV downloaded!', 'success');
+}
+
+loadReports();
+</script>
+</body>
+</html>
